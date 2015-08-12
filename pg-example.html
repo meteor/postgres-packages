@@ -1,0 +1,20 @@
+<head>
+  <title>pg-example</title>
+</head>
+
+<body>
+  <h1>Welcome to Meteor!</h1>
+
+  {{> hello}}
+</body>
+
+<template name="hello">
+  {{#each posts}}
+  <div>
+    <h1>{{title}}</h1>
+    {{#each comments}}
+    <div>{{text}}</div>
+    {{/each}}
+  </div>
+  {{/each}}
+</template>
