@@ -44,8 +44,6 @@ PG.Table = class Table {
 PG.knex = knex;
 PG.await = await;
 
-const Future = Npm.require('fibers/future');
-
 function await(promise) {
   var f = new Future();
   promise.then(
