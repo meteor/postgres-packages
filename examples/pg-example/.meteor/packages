@@ -8,5 +8,7 @@ meteor-platform
 insecure
 simple:pg
 jsx
+check
 percolate:migrations
 env-migrations
+aldeed:autoform

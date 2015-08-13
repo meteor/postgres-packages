@@ -22,7 +22,7 @@
 </template>
 
 <template name="allComments">
-  <div>
+  <div class="all-comments">
     <h1>All Comments</h1>
     {{#each comments}}
     <div>
@@ -30,5 +30,17 @@
       <p>{{text}}</p>
     </div>
     {{/each}}
+
+    {{#autoForm schema=formSchema id="contactForm" type="method" meteormethod="addComment"}}
+    <fieldset>
+      <legend>Add a new comment to a post</legend>
+      {{> afQuickField name="text" rows="10"}}
+      {{> afQuickField name="forPost"}}
+      <div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="reset" class="btn btn-default">Reset</button>
+      </div>
+    </fieldset>
+    {{/autoForm}}
   </div>
 </template>

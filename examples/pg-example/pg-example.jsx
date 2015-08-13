@@ -1,15 +1,20 @@
+let Comments, Posts, Things;
+
 if (Meteor.isClient) {
-  var Things = new Mongo.Collection('things');
+  Things = new Mongo.Collection('things');
   Template.posts.helpers({
     posts: function () {
       return Things.find();
     }
   });
 
-  var Comments = new Mongo.Collection('comments');
+  Comments = new Mongo.Collection('comments');
   Template.allComments.helpers({
     comments: function () {
       return Comments.find();
+    },
+    formSchema: function () {
+      return Schema.newComment;
     }
   });
 
@@ -18,13 +23,13 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  const Posts = new PG.Table("posts", {
+  Posts = new PG.Table("posts", {
     comments() {
       return this.hasMany(Comments.model, "post_id");
     }
   });
 
-  const Comments = new PG.Table("comments", {
+  Comments = new PG.Table("comments", {
     post() {
       return this.belongsTo(Posts.model, "post_id");
     }
@@ -69,3 +74,35 @@ if (Meteor.isServer) {
   //   'GROUP BY posts.id'
   // ].join(' ')
 }
+
+Schema = {};
+Schema.newComment = new SimpleSchema({
+  text: {
+    type: String,
+    label: "Comment text",
+    max: 50
+  },
+  forPost: {
+    type: Number,
+    label: "Id of post this comment belongs to"
+  }
+});
+
+Meteor.methods({
+  addComment(args) {
+    check(args, Schema.newComment);
+
+    const {text, forPost} = args;
+
+    const doc = {
+      text,
+      post_id: forPost
+    };
+
+    if (this.isSimulation) {
+      Comments.insert(doc);
+    } else {
+      PG.await(Comments.model.forge(doc).save());
+    }
+  }
+});
