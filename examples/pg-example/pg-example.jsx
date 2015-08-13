@@ -18,20 +18,13 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  const Posts = new PG.Table("posts", (table) => {
-    table.increments(); // id
-    table.string("title");
-  }, {
+  const Posts = new PG.Table("posts", {
     comments() {
       return this.hasMany(Comments.model, "post_id");
     }
   });
 
-  const Comments = new PG.Table("comments", (table) => {
-    table.increments(); // id
-    table.string("text");
-    table.integer("post_id");
-  }, {
+  const Comments = new PG.Table("comments", {
     post() {
       return this.belongsTo(Posts.model, "post_id");
     }

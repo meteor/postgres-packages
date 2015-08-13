@@ -27,7 +27,7 @@ bookshelf.Model.forge = function () {
 };
 
 PG.Table = class Table {
-  constructor(tableName, schemaFunc, relations) {
+  constructor(tableName, relations) {
     this.model = bookshelf.Model.extend({
       tableName: tableName,
       ...relations
@@ -36,12 +36,15 @@ PG.Table = class Table {
     const exists = await(knex.schema.hasTable(tableName));
 
     if (!exists) {
-      await(knex.schema.createTable(tableName, schemaFunc));
+      throw new Error(`Table '${tableName}' doesn't exist. Please create it in a migration.`);
     }
   }
 }
 
 PG.knex = knex;
+PG.await = await;
+
+const Future = Npm.require('fibers/future');
 
 function await(promise) {
   var f = new Future();

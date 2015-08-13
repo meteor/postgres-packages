@@ -1,40 +1,44 @@
 if (Meteor.isServer) {
   Migrations.add({
     version: 1,
-    name: 'This is a test migration',
+    name: 'Create posts and comments table',
     up: function() {
-      //code to migrate up to version 1
-      console.log("going up to version 1 from 0")
+      PG.await(PG.knex.schema.createTable("posts", (table) => {
+        table.increments(); // id
+        table.string("title");
+      }));
+
+      PG.await(PG.knex.schema.createTable("comments", (table) => {
+        table.increments(); // id
+        table.string("text");
+        table.integer("post_id");
+      }));
     },
     down: function() {
-      //code to migrate down to version 0
-      console.log("going down to 0 from 1");
+      PG.await(PG.knex.schema.dropTable("posts"));
+      PG.await(PG.knex.schema.dropTable("comments"));
     }
   });
 
   Migrations.add({
     version: 2,
-    name: 'This is a test migration',
+    name: 'Create fake posts and comments data',
     up: function() {
-      //code to migrate up to version 1
-      console.log("going up to version 2 from 1")
-    },
-    down: function() {
-      //code to migrate down to version 0
-      console.log("going down to 1 from 2");
-    }
-  });
+      _.range(1, 5).forEach((postIndex) => {
+        const ids = PG.await(PG.knex.table("posts")
+          .insert({title: `Fake post ${postIndex}`}, "id"));
 
-  Migrations.add({
-    version: 3,
-    name: 'This is a test migration',
-    up: function() {
-      //code to migrate up to version 1
-      console.log("going up to version 3 from 2")
+        _.range(1, 5).forEach((commentIndex) => {
+          PG.await(PG.knex.table("comments")
+            .insert({
+              text: `Fake comment ${commentIndex} on post ${postIndex}`,
+              post_id: ids[0]
+            }));
+        });
+      });
     },
     down: function() {
-      //code to migrate down to version 0
-      console.log("going down to 2 from 3");
+      // LOL not implemented
     }
   });
 
