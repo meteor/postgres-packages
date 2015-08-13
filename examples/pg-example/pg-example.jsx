@@ -100,6 +100,8 @@ Meteor.methods({
     };
 
     if (this.isSimulation) {
+      // we don't have latency compensation yet
+      return;
       Comments.insert(doc);
     } else {
       PG.await(Comments.model.forge(doc).save());
