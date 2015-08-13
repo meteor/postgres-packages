@@ -8,3 +8,5 @@ meteor-platform
 insecure
 simple:pg
 jsx
+percolate:migrations
+env-migrations
