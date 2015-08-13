@@ -1,11 +1,30 @@
 const Future = Npm.require('fibers/future');
 
-const knex = Npm.require('knex')({
+const Knex = Npm.require('knex');
+const knex = Knex({
   client: 'pg',
   connection: PG.defaultConnectionUrl
 });
 
+// the prototype of the chained query builder from knex
+const QBProto = Knex.Client.prototype.QueryBuilder.prototype;
+QBProto._publishCursor = function (sub) {
+  const queryStr = this.toString();
+  const tableName = this._single.table;
+  return new PG.Query(queryStr, tableName)._publishCursor(sub);
+};
+
 const bookshelf = Npm.require('bookshelf')(knex);
+const origModelForge = bookshelf.Model.forge;
+bookshelf.Model.forge = function () {
+  const ret = origModelForge.apply(this, arguments);
+  // monkey-patch forge, so we can make simple queries
+  // originated from Model publishable
+  ret._publishCursor = function (sub) {
+    return this._knex._publishCursor(sub);
+  };
+  return ret;
+};
 
 PG.Table = class Table {
   constructor(tableName, schemaFunc, relations) {

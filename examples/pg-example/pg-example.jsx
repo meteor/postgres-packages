@@ -1,15 +1,20 @@
 if (Meteor.isClient) {
   var Things = new Mongo.Collection('things');
-  Template.hello.helpers({
+  Template.posts.helpers({
     posts: function () {
       return Things.find();
-    },
-    post: function () {
-      return JSON.stringify(this, null, 2);
+    }
+  });
+
+  var Comments = new Mongo.Collection('comments');
+  Template.allComments.helpers({
+    comments: function () {
+      return Comments.find();
     }
   });
 
   Meteor.subscribe('mypub');
+  Meteor.subscribe('all-comments');
 }
 
 if (Meteor.isServer) {
@@ -45,8 +50,6 @@ if (Meteor.isServer) {
     }
   });
 
-  console.log()
-
   Meteor.publish('mypub', function () {
     return new PG.Query(
       PG.knex
@@ -57,6 +60,12 @@ if (Meteor.isServer) {
         .groupBy("posts.id")
         .toString(),
       'things');
+  });
+
+  Meteor.publish('all-comments', function (startingFrom) {
+    return Comments.model.where('id', '>', startingFrom || 0);
+    // also works with pure knex
+    // return PG.knex.table('comments').where('id', '>', startingFrom || 0);
   });
 
 

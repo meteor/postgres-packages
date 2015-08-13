@@ -3,18 +3,32 @@
 </head>
 
 <body>
-  <h1>Welcome to Meteor!</h1>
-
-  {{> hello}}
+  {{> posts}}
+  {{> allComments}}
 </body>
 
-<template name="hello">
-  {{#each posts}}
+<template name="posts">
   <div>
-    <h1>{{title}}</h1>
-    {{#each comments}}
-    <div>{{text}}</div>
+    <h1>Posts with comments</h1>
+    {{#each posts}}
+    <div>
+      <h3>{{title}}</h3>
+      {{#each comments}}
+      <div>{{text}}</div>
+      {{/each}}
+    </div>
     {{/each}}
   </div>
-  {{/each}}
+</template>
+
+<template name="allComments">
+  <div>
+    <h1>All Comments</h1>
+    {{#each comments}}
+    <div>
+      <h4>{{id}}</h4>
+      <p>{{text}}</p>
+    </div>
+    {{/each}}
+  </div>
 </template>
