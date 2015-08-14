@@ -3,21 +3,16 @@ if (Meteor.isServer) {
     version: 1,
     name: 'Create posts and comments table',
     up: PG.wrapWithTransaction(function() {
-      console.log("about to run stuff")
       PG.await(PG.knex.schema.createTable("posts", (table) => {
         table.increments(); // id
         table.string("title");
       }));
-
-      console.log("done running first thing..");
 
       PG.await(PG.knex.schema.createTable("comments", (table) => {
         table.increments(); // id
         table.string("text");
         table.integer("post_id");
       }));
-
-      console.log("done with stuff!!");
     }),
     down: PG.wrapWithTransaction(function() {
       PG.await(PG.knex.schema.dropTable("posts"));
