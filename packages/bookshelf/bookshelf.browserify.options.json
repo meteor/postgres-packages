@@ -1,0 +1,11 @@
+{
+    "transforms": {
+        "exposify": {
+            "global": true,
+            "expose": {
+                "bluebird": "Package.promise.Promise",
+                "lodash": "Package.underscore._"
+            }
+        }
+    }
+}
