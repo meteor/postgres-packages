@@ -1,5 +1,9 @@
 Migrations.runIfEnvSet = function () {
   if (process.env.RUN_MIGRATIONS) {
+    // Since we have transactions, we don't need to lock stuff
+    Migrations._collection.update({_id:"control"}, {$set:{"locked":false}});
+
+    // Run the migration
     Migrations.migrateTo(process.env.RUN_MIGRATIONS);
     console.log("=> Done running migrations. Kill your app manually and restart without the RUN_MIGRATIONS env var.");
     process.exit(0);

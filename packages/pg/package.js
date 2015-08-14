@@ -18,12 +18,14 @@ Package.onUse(function(api) {
     'random',
     'ejson',
     'underscore',
-    'jsx'
+    'jsx',
+    'ecmascript'
   ], 'server');
 
   api.addFiles([
     'pg.js',
-    'collection.jsx'
+    'collection.js',
+    'transaction.js'
   ], 'server');
 
   api.export('PG', 'server');
