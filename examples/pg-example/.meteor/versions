@@ -13,6 +13,8 @@ caching-compiler@1.0.0-rc.0
 caching-html-compiler@1.0.1-rc.0
 callback-hook@1.0.4-rc.0
 check@1.0.6-rc.0
+coffeescript@1.0.8-rc.1
+cosmos:browserify@0.5.0
 ddp@1.2.1-rc.0
 ddp-client@1.2.1-rc.0
 ddp-common@1.2.1-rc.0
@@ -57,6 +59,7 @@ reload@1.1.4-rc.0
 retry@1.0.4-rc.0
 routepolicy@1.0.6-rc.0
 session@1.1.1-rc.0
+simple:bookshelf@0.0.1
 simple:pg@0.0.1
 spacebars@1.0.7-rc.0
 spacebars-compiler@1.0.7-rc.0

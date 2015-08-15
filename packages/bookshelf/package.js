@@ -24,4 +24,9 @@ Package.onUse(function(api) {
   api.export(['Bookshelf', 'Knex'], 'client');
 });
 
-Package.onTest(function(api) {});
+Package.onTest(function(api) {
+  api.use('ecmascript');
+  api.use('tinytest');
+  api.use('simple:bookshelf');
+  api.addFiles('knex_tests.js', 'client');
+});

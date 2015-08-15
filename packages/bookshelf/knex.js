@@ -9,7 +9,12 @@ knex.queryBuilder = function () {
 
 knex.VERSION = '0.8.6-minimongo';
 
-// XXX
+const methods = [
+  'insert', 'update', 'select', 'delete', 'del',
+  'where', 'whereNot', 'whereNull', 'whereNotNull',
+  'whereExists', 'whereNotExists', 'whereIn', 'whereNotIn',
+  'whereBetween', 'whereNotBetween'
+];
 methods.forEach(function (method) {
   knex[method] = function (...args) {
     var builder = knex.queryBuilder();
@@ -54,7 +59,7 @@ _.extend(Builder.prototype, {
     if (!column) return this;
     this._statements.push({
       grouping: 'columns',
-      value: helpers.normalizeArr.apply(null, arguments)
+      value: normalizeArr.apply(null, arguments)
     });
     return this;
   },
@@ -152,6 +157,16 @@ _.extend(Builder.prototype, {
     for (var key in obj) {
       this[boolVal + 'Where' + notVal](key, obj[key]);
     }
+    return this;
+  },
+    whereWrapped: function(callback) {
+    this._statements.push({
+      grouping: 'where',
+      type: 'whereWrapped',
+      value: callback,
+      not: this._not(),
+      bool: this._bool()
+    });
     return this;
   },
 
@@ -406,6 +421,16 @@ Builder.prototype.queryCompiler = function (queryBuilder) {
 function assert(cond, msg) {
   if (! cond) throw new Error(msg);
 }
+function normalizeArr() {
+  var args = new Array(arguments.length);
+  for (var i = 0; i < args.length; i++) {
+    args[i] = arguments[i];
+  }
+  if (Array.isArray(args[0])) {
+    return args[0];
+  }
+  return args;
+}
 
 // XXX this is a place-holder for Raw, it is not implemented
 function Raw () {};
@@ -421,15 +446,14 @@ function QueryCompiler(builder) {
 }
 
 var components = [
-  'columns', 'join', 'where', 'union', 'group',
-  'having', 'order', 'limit', 'offset', 'lock'
+  'columns', 'where', 'order', 'limit', 'offset',
+  // XXX not implemeneted 'join', 'union', 'group', 'having', 'lock'
 ];
 
 _.extend(QueryCompiler.prototype, {
 
   // Should return an object with selector, modifier and options
   toMongoQuery: function(method) {
-    console.log(method, this);
     method = method || this.method;
     return this[method]();
   },
@@ -438,11 +462,14 @@ _.extend(QueryCompiler.prototype, {
   // by calling each of the component compilers, trimming out
   // the empties, and returning a generated query string.
   select: function() {
-    var i = -1, statements = [];
+    var i = -1, combined = {};
     while (++i < components.length) {
-      statements.push(this[components[i]](this));
+      _.extend(combined, this[components[i]](this));
     }
-    return _.compact(statements).join(' ');
+    return _.extend({
+      collection: this.single.table,
+      method: 'find'
+    }, combined);
   },
   
   // Compiles an "insert" query, allowing for multiple
@@ -494,7 +521,12 @@ _.extend(QueryCompiler.prototype, {
 
   // compiles columns to projection
   columns: function() {
-    throw new Error();
+    const columns = this.grouped.columns || [];
+    const projection = {};
+
+    columns.forEach(column => projection[column] = 1);
+
+    return {projection};
   },
 
 
@@ -529,8 +561,35 @@ _.extend(QueryCompiler.prototype, {
     return this.update();
   },
 
+  order: function () {
+    return {
+      sort: {}
+    };
+  },
+
+  offset: function () {
+    return {
+      skip: 0
+    };
+  },
+
+  limit: function () {
+    return {
+      limit: 0
+    };
+  },
+
   // Where Clause
   // ------
+
+  where: function() {
+    const wheres = this.grouped.where || [];
+    const selector = {};
+    wheres.forEach((where) => {
+      console.log(where); // XXX not implemented
+    });
+    return {selector};
+  },
 
   whereIn: function(statement) {
     if (Array.isArray(statement.column)) return this.multiWhereIn(statement);
