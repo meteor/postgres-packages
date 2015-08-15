@@ -586,20 +586,78 @@ _.extend(QueryCompiler.prototype, {
 
   where: function() {
     const wheres = this.grouped.where || [];
-    const selector = {};
-    wheres.forEach((whereGroup) => {
-      const {type, column, operator, value} = whereGroup;
+    const parts = [];
+    let logicalBool = null;
+    let selector = null;
+ 
+    wheres.forEach((whereGroup, i) => {
+      const {bool, type, column, operator, value} = whereGroup;
+
+      if (i) {
+        if (logicalBool && logicalBool !== bool) {
+          throw new Error(`Ambiguous and/or WHERE clause`);
+        }
+        logicalBool = bool;
+      }
 
       switch (type) {
         case 'whereBasic':
-          selector[column] = _.extend(
-            selector[column] || {},
-            compileSubselector(operator, value));
+          parts.push({
+            [column]: compileSubselector(operator, value)
+          });
+
           break;
         default:
           throw new Error(`Unsupported where type '${type}'`);
       }
     });
+
+    logicalBool = logicalBool || 'and';
+    if (logicalBool === 'or') {
+      selector = {
+        $or: parts
+      };
+    } else if (logicalBool === 'and') {
+      // { field: { $gt: [2, 3] , ...}, ... }
+      const opsTable = {};
+
+      // each part looks like { field: { $gt: 2, $lt: 1 } }
+      parts.forEach((subsel) => {
+        const subselKeys = Object.keys(subsel);
+        subselKeys.forEach((key) => {
+          const table = (opsTable[key] = opsTable[key] || {});
+          const ops = subsel[key];
+
+          // each op looks $gt or $lt, etc
+          Object.keys(ops).forEach((op) => {
+            table[op] = table[op] || [];
+            table[op].push(ops[op]);
+          });
+        });
+      });
+
+      // merge multiple rules on the same path
+      // {x: {$gt: 2}} + {x: {$gt: 3}} -> {x: { $and: [{$gt: 2}, {$gt: 3}] }};
+      selector = {};
+      const keys = Object.keys(opsTable);
+      keys.forEach((key) => {
+        const table = opsTable[key];
+        const $and = _.flatten(table.$and);
+        const subsel = (selector[key] = {});
+        Object.keys(table).forEach((op) => {
+          const pieces = table[op];
+          if (pieces.length > 1) {
+            $and.push(...pieces);
+          } else {
+            subsel[op] = pieces[0];
+          }
+        });
+
+        if ($and.length > 0) {
+          subsel.$and = $and;
+        }
+      });
+    }
 
     return {selector};
 

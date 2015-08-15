@@ -71,4 +71,47 @@ Tinytest.add('knex - sql to mongo', (test) => {
     },
     'numeric comparisons in WHERE for the same column'
   );
+
+  t(
+    Knex('people').select('first_name').select('last_name').where('age', '>', 18),
+    {
+      method: 'find',
+      collection: 'people',
+      selector: {
+        age: { $gt: 18 }
+      },
+      projection: {
+        first_name: 1,
+        last_name: 1
+      }
+    },
+    'selects and wheres'
+  );
+
+  t(
+    Knex('table').where({
+      x: 1,
+      y: 2
+    }),
+    {
+      selector: {
+        x: { $eq: 1 },
+        y: { $eq: 2 }
+      }
+    },
+    'where with object'
+  );
+
+  t(
+    Knex('table').where('x', 1).orWhere('x', 3),
+    {
+      selector: {
+        $or: [{
+          x: { $eq: 1 }
+        }, {
+          x: { $eq: 3 }
+        }]
+      }
+    }
+  );
 });
