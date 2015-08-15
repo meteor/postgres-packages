@@ -524,7 +524,9 @@ _.extend(QueryCompiler.prototype, {
     const columns = this.grouped.columns || [];
     const projection = {};
 
-    columns.forEach(column => projection[column] = 1);
+    columns.forEach(columnGroup =>
+      columnGroup.value.forEach(column =>
+        projection[column] = 1));
 
     return {projection};
   },
@@ -585,10 +587,37 @@ _.extend(QueryCompiler.prototype, {
   where: function() {
     const wheres = this.grouped.where || [];
     const selector = {};
-    wheres.forEach((where) => {
-      console.log(where); // XXX not implemented
+    wheres.forEach((whereGroup) => {
+      const {type, column, operator, value} = whereGroup;
+
+      switch (type) {
+        case 'whereBasic':
+          selector[column] = _.extend(
+            selector[column] || {},
+            compileSubselector(operator, value));
+          break;
+        default:
+          throw new Error(`Unsupported where type '${type}'`);
+      }
     });
+
     return {selector};
+
+    function compileSubselector(operator, value) {
+      const table = {
+        '=': '$eq',
+        '<>': '$ne',
+        '<': '$lt',
+        '<=': '$lte',
+        '>': '$gt',
+        '>=': '$gte'
+      };
+      const op = table[operator];
+
+      if (! op) throw new Error(`Unsupported comparison operator '${operator}'`);
+
+      return { [op]: value };
+    }
   },
 
   whereIn: function(statement) {
