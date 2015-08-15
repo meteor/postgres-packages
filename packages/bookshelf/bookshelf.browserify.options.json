@@ -3,8 +3,9 @@
         "exposify": {
             "global": true,
             "expose": {
-                "bluebird": "Package.promise.Promise",
-                "lodash": "Package.underscore._"
+                "bluebird": "__Sync_BlueBird",
+                "lodash": "Package.underscore._",
+                "lodash/object/assign": "Package.underscore._.extend"
             }
         }
     }
