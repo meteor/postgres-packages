@@ -9,6 +9,7 @@ PG.wrapWithTransaction = function wrapWithTransaction(func) {
 
     const transactionRun = new Promise((resolve, reject) => {
       PG.knex.transaction(Meteor.bindEnvironment((trx) => {
+        console.log("inside transaction")
         try {
           ret = func.apply(this, arguments);
           trx.commit();
@@ -19,6 +20,8 @@ PG.wrapWithTransaction = function wrapWithTransaction(func) {
         }
       }));
     });
+
+    console.log("after transaction");
 
     return Promise.await(transactionRun);
   };

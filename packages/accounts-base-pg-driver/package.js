@@ -15,7 +15,8 @@ Package.onUse(function(api) {
   api.addFiles('accounts-base-pg-driver.js');
   api.use([
     'simple:pg',
-    'ecmascript'
+    'ecmascript',
+    'check'
   ]);
 
   api.export("AccountsDBClientPG");

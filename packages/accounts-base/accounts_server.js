@@ -41,7 +41,6 @@ AccountsServer = function AccountsServer(server) {
   // list of all registered handlers.
   this._loginHandlers = [];
 
-  setupUsersCollection(this.users);
   setupDefaultLoginHandlers(this);
   setExpireTokensInterval(this);
 
@@ -49,6 +48,8 @@ AccountsServer = function AccountsServer(server) {
   this._validateNewUserHooks = [
     defaultValidateNewUserHook.bind(this)
   ];
+
+  this.dbClient = new AccountsDBClientPG();
 
   this._deleteSavedTokensForAllUsersOnStartup();
 
@@ -1201,10 +1202,6 @@ Ap.insertUserDoc = function (options, user) {
   // the user document (in which you can modify its contents), and
   // one that gets called after (in which you should change other
   // collections)
-  user = _.extend({
-    createdAt: new Date(),
-    _id: Random.id()
-  }, user);
 
   if (user.services) {
     _.each(user.services, function (serviceData) {
@@ -1232,18 +1229,12 @@ Ap.insertUserDoc = function (options, user) {
 
   var userId;
   try {
-    userId = this.users.insert(fullUser);
+    userId = this.dbClient.insertUserDoc(fullUser);
   } catch (e) {
-    // XXX string parsing sucks, maybe
-    // https://jira.mongodb.org/browse/SERVER-3069 will get fixed one day
-    if (e.name !== 'MongoError') throw e;
-    var match = e.err.match(/E11000 duplicate key error index: ([^ ]+)/);
-    if (!match) throw e;
-    if (match[1].indexOf('$emails.address') !== -1)
-      throw new Meteor.Error(403, "Email already exists.");
-    if (match[1].indexOf('username') !== -1)
+    if (e.message.match("Key username for login service password")) {
       throw new Meteor.Error(403, "Username already exists.");
-    // XXX better error reporting for services.facebook.id duplicate, etc
+    }
+
     throw e;
   }
   return userId;
@@ -1345,7 +1336,10 @@ Ap.updateOrCreateUserFromExternalService = function (
     selector[serviceIdKey] = serviceData.id;
   }
 
-  var user = this.users.findOne(selector);
+  console.log("selector!", selector);
+
+  var user = this.dbClient.getUserByServiceIdAndName(serviceName, serviceData.id);
+  console.log("found user!", user);
 
   if (user) {
     pinEncryptedFieldsToUser(serviceData, user._id);
@@ -1355,16 +1349,7 @@ Ap.updateOrCreateUserFromExternalService = function (
     // don't cache old email addresses in serviceData.email).
     // XXX provide an onUpdateUser hook which would let apps update
     //     the profile too
-    var setAttrs = {};
-    _.each(serviceData, function (value, key) {
-      setAttrs["services." + serviceName + "." + key] = value;
-    });
-
-    // XXX Maybe we should re-use the selector above and notice if the update
-    //     touches nothing?
-    this.users.update(user._id, {
-      $set: setAttrs
-    });
+    this.dbClient.setServiceData(user._id, serviceData);
 
     return {
       type: serviceName,
@@ -1384,28 +1369,6 @@ Ap.updateOrCreateUserFromExternalService = function (
 };
 
 function setupUsersCollection(users) {
-  ///
-  /// RESTRICTING WRITES TO USER OBJECTS
-  ///
-  users.allow({
-    // clients can modify the profile field of their own document, and
-    // nothing else.
-    update: function (userId, user, fields, modifier) {
-      // make sure it is our record
-      if (user._id !== userId)
-        return false;
-
-      // user can only modify the 'profile' field. sets to multiple
-      // sub-keys (eg profile.foo and profile.bar) are merged into entry
-      // in the fields list.
-      if (fields.length !== 1 || fields[0] !== 'profile')
-        return false;
-
-      return true;
-    },
-    fetch: ['_id'] // we only look at _id.
-  });
-
   /// DEFAULT INDEXES ON USERS
   users._ensureIndex('username', {unique: 1, sparse: 1});
   users._ensureIndex('emails.address', {unique: 1, sparse: 1});
@@ -1440,24 +1403,11 @@ Ap._deleteSavedTokensForUser = function (userId, tokensToDelete) {
 };
 
 Ap._deleteSavedTokensForAllUsersOnStartup = function () {
-  var self = this;
-
   // If we find users who have saved tokens to delete on startup, delete
   // them now. It's possible that the server could have crashed and come
   // back up before new tokens are found in localStorage, but this
   // shouldn't happen very often. We shouldn't put a delay here because
   // that would give a lot of power to an attacker with a stolen login
   // token and the ability to crash the server.
-  Meteor.startup(function () {
-    self.users.find({
-      "services.resume.haveLoginTokensToDelete": true
-    }, {
-      "services.resume.loginTokensToDelete": 1
-    }).forEach(function (user) {
-      self._deleteSavedTokensForUser(
-        user._id,
-        user.services.resume.loginTokensToDelete
-      );
-    });
-  });
+  this.dbClient.deleteAllResumeTokens();
 };

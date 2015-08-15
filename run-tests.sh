@@ -6,4 +6,5 @@ export PACKAGE_DIRS="$(dirname $0)/packages/"
 echo $PACKAGE_DIRS
 
 meteor --release METEOR@1.2-rc.3 test-packages \
-  "$PACKAGE_DIRS/accounts-base-pg-driver"
+  "$PACKAGE_DIRS/accounts-base-pg-driver" \
+  "$PACKAGE_DIRS/accounts-base"

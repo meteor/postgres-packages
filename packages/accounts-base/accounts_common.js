@@ -13,12 +13,14 @@ AccountsCommon = function _AccountsCommon(options) {
   this.connection = undefined;
   this._initConnection(options || {});
 
-  // There is an allow call in accounts_server.js that restricts writes to
-  // this collection.
-  this.users = new Mongo.Collection("users", {
-    _preventAutopublish: true,
-    connection: this.connection
-  });
+  if (Meteor.isClient) {
+    // There is an allow call in accounts_server.js that restricts writes to
+    // this collection.
+    this.users = new Mongo.Collection("users", {
+      _preventAutopublish: true,
+      connection: this.connection
+    });
+  }
 
   // Callback exceptions are printed with Meteor._debug and ignored.
   this._onLoginHook = new Hook({

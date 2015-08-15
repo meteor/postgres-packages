@@ -1,9 +1,14 @@
 Package.describe({
   summary: "A user account system",
-  version: "1.2.1-plugins.0"
+  version: "1.2.1-rc.0"
 });
 
 Package.onUse(function (api) {
+  api.use([
+    'accounts-base-pg-driver',
+    'simple:pg'
+  ], ['server']);
+
   api.use('underscore', ['client', 'server']);
   api.use('ddp-rate-limiter');
   api.use('localstorage', 'client');
@@ -22,7 +27,7 @@ Package.onUse(function (api) {
 
   // need this because of the Meteor.users collection but in the future
   // we'd probably want to abstract this away
-  api.use('mongo', ['client', 'server']);
+  api.use('mongo', ['client']);
 
   // If the 'blaze' package is loaded, we'll define some helpers like
   // {{currentUser}}.  If not, no biggie.
@@ -61,6 +66,11 @@ Package.onUse(function (api) {
 });
 
 Package.onTest(function (api) {
+  api.use([
+    'accounts-base-pg-driver',
+    'simple:pg'
+  ], ['server']);
+
   api.use([
     'accounts-base',
     'tinytest',
