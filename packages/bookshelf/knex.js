@@ -620,11 +620,17 @@ _.extend(QueryCompiler.prototype, {
     } else if (logicalBool === 'and') {
       // { field: { $gt: [2, 3] , ...}, ... }
       const opsTable = {};
+      const $and = [];
 
       // each part looks like { field: { $gt: 2, $lt: 1 } }
       parts.forEach((subsel) => {
         const subselKeys = Object.keys(subsel);
         subselKeys.forEach((key) => {
+          if (key === '$and') {
+            $and.push(...subsel[key]);
+            return;
+          }
+
           const table = (opsTable[key] = opsTable[key] || {});
           const ops = subsel[key];
 
@@ -637,26 +643,30 @@ _.extend(QueryCompiler.prototype, {
       });
 
       // merge multiple rules on the same path
-      // {x: {$gt: 2}} + {x: {$gt: 3}} -> {x: { $and: [{$gt: 2}, {$gt: 3}] }};
+      // {x: {$gt: 2}} + {x: {$gt: 3}} -> {$and: [{x: ...}, {x: ...}]}
       selector = {};
       const keys = Object.keys(opsTable);
+
       keys.forEach((key) => {
         const table = opsTable[key];
-        const $and = _.flatten(table.$and);
         const subsel = (selector[key] = {});
         Object.keys(table).forEach((op) => {
           const pieces = table[op];
           if (pieces.length > 1) {
-            $and.push(...pieces);
+            $and.push(...pieces.map(piece => ({[key]: {[op]: piece}})));
           } else {
             subsel[op] = pieces[0];
           }
         });
 
-        if ($and.length > 0) {
-          subsel.$and = $and;
+        if (_.isEmpty(subsel)) {
+          delete selector[key];
         }
       });
+
+      if ($and.length > 0) {
+        selector.$and = $and;
+      }
     }
 
     return {selector};

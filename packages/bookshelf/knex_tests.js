@@ -114,4 +114,21 @@ Tinytest.add('knex - sql to mongo', (test) => {
       }
     }
   );
+
+  test.throws(() =>
+    Knex('t').where('x', '1').orWhere('y', '2').andWhere('z', 3).toMongoQuery(),
+    /Ambiguous .* WHERE/);
+
+  t(
+    Knex('t').where('a', '>', 1).where('a', '>', 2),
+    {
+      selector: {
+        $and: [
+          {a: {$gt: 1}},
+          {a: {$gt: 2}}
+        ]
+      }
+    },
+    'multiple conditions with the same operator on the same field'
+  );
 });
