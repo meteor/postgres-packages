@@ -600,7 +600,12 @@ _.extend(QueryCompiler.prototype, {
           parts.push({
             [column]: compileSubselector(operator, value)
           });
-
+          break;
+        case 'whereWrapped':
+          const builder = new QueryBuilder();
+          value.call(builder);
+          const subSelector = builder.toMongoQuery().selector;
+          parts.push(subSelector);
           break;
         default:
           throw new Error(`Unsupported where type '${type}'`);
@@ -616,6 +621,7 @@ _.extend(QueryCompiler.prototype, {
       // { field: { $gt: [2, 3] , ...}, ... }
       const opsTable = {};
       const $and = [];
+      const $ors = [];
 
       // each part looks like { field: { $gt: 2, $lt: 1 } }
       parts.forEach((subsel) => {
@@ -623,6 +629,10 @@ _.extend(QueryCompiler.prototype, {
         subselKeys.forEach((key) => {
           if (key === '$and') {
             $and.push(...subsel[key]);
+            return;
+          }
+          if (key === '$or') {
+            $ors.push(subsel[key]);
             return;
           }
 
@@ -662,6 +672,23 @@ _.extend(QueryCompiler.prototype, {
       if ($and.length > 0) {
         selector.$and = $and;
       }
+      if ($ors.length > 0) {
+        if ($ors.length === 1) {
+          selector.$or = $ors[0];
+        } else {
+          selector = {
+            $and: [
+              selector,
+              ...$ors.map($or => ({$or}))
+            ]
+          };
+
+          if (_.isEmpty(selector.$and[0])) {
+            // in case the original selector was empty
+            selector.$and.shift();
+          }
+        }
+      }
     }
 
     return {selector};
@@ -674,6 +701,7 @@ _.extend(QueryCompiler.prototype, {
         '<=': '$lte',
         '>': '$gt',
         '>=': '$gte'
+        // XXX 'in': '$in'?
       };
       const op = table[operator];
 

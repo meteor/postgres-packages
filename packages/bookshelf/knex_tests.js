@@ -133,6 +133,40 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
+    Knex('t').where(function () {
+      this.where('id', 1).andWhere('x', '>', 5);
+    }).orWhere(function () {
+      this.where('id', 2).andWhere('x', '<', 0);
+    }),
+    {
+      selector: {
+        $or: [
+          {id: {$eq: 1}, x: {$gt: 5}},
+          {id: {$eq: 2}, x: {$lt: 0}}
+        ]
+      }
+    },
+    'nested or/and where'
+  );
+
+  t(
+    Knex('t').where(function () {
+      this.where('id', 1).orWhere('x', '>', 5);
+    }).andWhere(function () {
+      this.where('id', 2).orWhere('x', '<', 0);
+    }),
+    {
+      selector: {
+        $and: [
+          {$or: [{id: {$eq: 1}}, {x: {$gt: 5}}]},
+          {$or: [{id: {$eq: 2}}, {x: {$lt: 0}}]}
+        ]
+      }
+    },
+    'nested and/or where'
+  );
+
+  t(
     Knex('t').orderBy('c'),
     {
       sort: [['c', 'asc']]
