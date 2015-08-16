@@ -23,40 +23,45 @@ Promise.setScheduler(function(callback) {
 // Promise and make it synchronous
 Promise.synchronize = function(fn) {
   return function wrapper() {
-    var queue = [];
-    var gotResult = false;
-
-    callbackQueueStack.push(queue);
-
-    try {
-      var result = fn.apply(this, arguments);
-      if (Promise.is(result)) {
-        result.done(function(value) {
-          result = value;
-          gotResult = true;
-        });
-      } else {
-        gotResult = true;
-      }
-    } finally {
-      for (var i = 0; i < queue.length; ++i) {
-        try {
-          (0, queue[i])();
-        } finally {
-          continue;
-        }
-      }
-      callbackQueueStack.pop();
+    var result = fn.apply(this, arguments);
+    if (Promise.is(result)) {
+      return Promise.await(result);
+    } else {
+      return result;
     }
-
-    if (! gotResult) {
-      throw new Error(
-        "Promise.synchronize could not fulfill all promises synchronously"
-      );
-    }
-
-    return result;
   };
+};
+
+Promise.await = function (promise) {
+  var queue = [];
+  var gotResult = false;
+  var result;
+
+  callbackQueueStack.push(queue);
+
+  try {
+    promise.done(function(value) {
+      result = value;
+      gotResult = true;
+    });
+  } finally {
+    for (var i = 0; i < queue.length; ++i) {
+      try {
+        (0, queue[i])();
+      } finally {
+        continue;
+      }
+    }
+    callbackQueueStack.pop();
+  }
+
+  if (! gotResult) {
+    throw new Error(
+      "Promise.synchronize could not fulfill all promises synchronously"
+    );
+  }
+
+  return result;
 };
 
 window.__Sync_BlueBird = Promise;

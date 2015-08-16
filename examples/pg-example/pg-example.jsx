@@ -1,5 +1,3 @@
-let Comments, Posts, Things;
-
 if (Meteor.isClient) {
   Things = new Mongo.Collection('things');
   Template.posts.helpers({

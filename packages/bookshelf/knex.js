@@ -785,3 +785,5 @@ Object.defineProperty(QueryCompiler.prototype, 'tableName', {
 
 
 Knex = function () { return knex; };
+Knex.QueryBuilder = QueryBuilder;
+Knex.QueryCompiler = QueryCompiler;

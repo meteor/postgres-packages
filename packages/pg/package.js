@@ -7,9 +7,7 @@ Package.describe({
 
 Npm.depends({
   'pg-live-select': 'https://github.com/Slava/pg-live-select/tarball/fc443165b070572238a124d100ca7fe6dbb7313e',
-  'pg': '4.4.1',
-  'bookshelf': '0.8.1',
-  'knex': '0.8.6'
+  'pg': '4.4.1'
 });
 
 Package.onUse(function(api) {
@@ -18,17 +16,26 @@ Package.onUse(function(api) {
     'random',
     'ejson',
     'underscore',
-    'jsx',
-    'ecmascript'
+    'jsx'
+  ], 'server');
+
+  api.use([
+    'ecmascript',
+    'simple:bookshelf'
+  ]);
+
+  api.addFiles('pre.js');
+
+  api.addFiles([
+    'pg.js'
   ], 'server');
 
   api.addFiles([
-    'pg.js',
     'collection.js',
     'transaction.js'
-  ], 'server');
+  ]);
 
-  api.export('PG', 'server');
+  api.export('PG');
 });
 
 Package.onTest(function(api) {

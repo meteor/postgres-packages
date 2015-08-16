@@ -1,9 +1,9 @@
-PG = {};
-
 PG.defaultConnectionUrl = process.env.POSTGRESQL_URL || 'postgres://127.0.0.1/postgres';
 
 var pg = Npm.require('pg');
 var LivePg = Npm.require('pg-live-select');
+
+PG._npmModule = pg;
 
 var pgClient = Meteor.wrapAsync(pg.connect.bind(pg))(PG.defaultConnectionUrl);
 var livePg = new LivePg(PG.defaultConnectionUrl, 'simple_pg_' + Random.id(4));
