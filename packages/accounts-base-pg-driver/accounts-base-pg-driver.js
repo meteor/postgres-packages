@@ -74,7 +74,8 @@ AccountsDBClientPG = class AccountsDBClientPG {
     }
   }
 
-  insertHashedLoginToken(userId, token) {
+  // Timestamp is optional
+  insertHashedLoginToken(userId, token, timestamp) {
     console.log("INSERTING TOKEN", token);
     PG.inTransaction(() => {
       PG.await(PG.knex("users_services").insert({
@@ -82,7 +83,8 @@ AccountsDBClientPG = class AccountsDBClientPG {
         service_name: "resume",
         key: "loginTokens",
         value: token,
-        id_if_not_unique: 0
+        id_if_not_unique: 0,
+        created_at: new Date(timestamp)
       }));
     });
   }

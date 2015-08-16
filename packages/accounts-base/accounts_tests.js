@@ -205,33 +205,33 @@ Tinytest.add('accounts - insertUserDoc email', function (test) {
 //   }
 // );
 
-// Tinytest.add(
-//   'accounts - get new token',
-//   function (test) {
-//     // Test that the `getNewToken` method returns us a valid token, with
-//     // the same expiration as our original token.
-//     var userId = Accounts.insertUserDoc({}, { username: Random.id() });
-//     var stampedToken = Accounts._generateStampedLoginToken();
-//     Accounts._insertLoginToken(userId, stampedToken);
-//     var conn = DDP.connect(Meteor.absoluteUrl());
-//     conn.call('login', { resume: stampedToken.token });
-//     test.equal(conn.call('getCurrentLoginToken'),
-//                Accounts._hashLoginToken(stampedToken.token));
+Tinytest.add(
+  'accounts - get new token',
+  function (test) {
+    // Test that the `getNewToken` method returns us a valid token, with
+    // the same expiration as our original token.
+    var userId = Accounts.insertUserDoc({}, { username: Random.id() });
+    var stampedToken = Accounts._generateStampedLoginToken();
+    Accounts._insertLoginToken(userId, stampedToken);
+    var conn = DDP.connect(Meteor.absoluteUrl());
+    conn.call('login', { resume: stampedToken.token });
+    test.equal(conn.call('getCurrentLoginToken'),
+               Accounts._hashLoginToken(stampedToken.token));
 
-//     var newTokenResult = conn.call('getNewToken');
-//     test.equal(newTokenResult.tokenExpires,
-//                Accounts._tokenExpiration(stampedToken.when));
-//     test.equal(conn.call('getCurrentLoginToken'),
-//                Accounts._hashLoginToken(newTokenResult.token));
-//     conn.disconnect();
+    var newTokenResult = conn.call('getNewToken');
+    test.equal(newTokenResult.tokenExpires,
+               Accounts._tokenExpiration(stampedToken.when));
+    test.equal(conn.call('getCurrentLoginToken'),
+               Accounts._hashLoginToken(newTokenResult.token));
+    conn.disconnect();
 
-//     // A second connection should be able to log in with the new token
-//     // we got.
-//     var secondConn = DDP.connect(Meteor.absoluteUrl());
-//     secondConn.call('login', { resume: newTokenResult.token });
-//     secondConn.disconnect();
-//   }
-// );
+    // A second connection should be able to log in with the new token
+    // we got.
+    var secondConn = DDP.connect(Meteor.absoluteUrl());
+    secondConn.call('login', { resume: newTokenResult.token });
+    secondConn.disconnect();
+  }
+);
 
 // Tinytest.addAsync(
 //   'accounts - remove other tokens',

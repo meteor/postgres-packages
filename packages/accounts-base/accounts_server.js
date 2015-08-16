@@ -578,12 +578,12 @@ Ap._initServerMethods = function () {
   //   tokenExpires: <expiration date> }.
   methods.getNewToken = function () {
     var self = this;
-    var user = accounts.users.findOne(self.userId, {
-      fields: { "services.resume.loginTokens": 1 }
-    });
+    var user = accounts.dbClient.getUserById(self.userId);
+
     if (! self.userId || ! user) {
       throw new Meteor.Error("You are not logged in.");
     }
+
     // Be careful not to generate a new token that has a later
     // expiration than the curren token. Otherwise, a bad guy with a
     // stolen token could use this method to stop his stolen token from
@@ -794,7 +794,7 @@ Ap._hashStampedToken = function (stampedToken) {
 // logging in simultaneously has already inserted the new hashed
 // token.
 Ap._insertHashedLoginToken = function (userId, hashedToken) {
-  this.dbClient.insertHashedLoginToken(userId, hashedToken.hashedToken);
+  this.dbClient.insertHashedLoginToken(userId, hashedToken.hashedToken, hashedToken.when);
 };
 
 
