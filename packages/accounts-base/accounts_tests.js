@@ -1,10 +1,6 @@
 // PG.wrapWithTransaction(AccountsDBClientPG.migrations.up)();
 // console.log("ran migration");
 
-
-Accounts = new AccountsServer(Meteor.server);
-Meteor.users = Accounts.users;
-
 Meteor.methods({
   getCurrentLoginToken: function () {
     return Accounts._getLoginToken(this.connection.id);
@@ -104,60 +100,59 @@ Tinytest.add('accounts - insertUserDoc username', function (test) {
   Accounts.dbClient.deleteUser(userId);
 });
 
-// Tinytest.add('accounts - insertUserDoc email', function (test) {
-//   var email1 = Random.id();
-//   var email2 = Random.id();
-//   var email3 = Random.id();
-//   var userIn = {
-//     emails: [{address: email1, verified: false},
-//              {address: email2, verified: true}]
-//   };
+Tinytest.add('accounts - insertUserDoc email', function (test) {
+  var email1 = Random.id();
+  var email2 = Random.id();
+  var email3 = Random.id();
+  var userIn = {
+    emails: [{address: email1, verified: false},
+             {address: email2, verified: true}]
+  };
 
-//   // user does not already exist. create a user object with fields set.
-//   var userId = Accounts.insertUserDoc(
-//     {profile: {name: 'Foo Bar'}},
-//     userIn
-//   );
-//   var userOut = Meteor.users.findOne(userId);
+  // user does not already exist. create a user object with fields set.
+  var userId = Accounts.insertUserDoc({},
+    userIn
+  );
+  var userOut = Accounts.dbClient.getUserById(userId);
 
-//   test.equal(typeof userOut.createdAt, 'object');
-//   test.equal(userOut.profile.name, 'Foo Bar');
-//   test.equal(userOut.emails, userIn.emails);
+  test.equal(typeof userOut.createdAt, 'object');
+  console.log(userOut, userIn);
+  test.equal(userOut.emails, userIn.emails);
 
-//   // run the hook again with the exact same emails.
-//   // run the hook again. now the user exists, so it throws an error.
-//   test.throws(function () {
-//     Accounts.insertUserDoc(
-//       {profile: {name: 'Foo Bar'}},
-//       userIn
-//     );
-//   });
+  // run the hook again with the exact same emails.
+  // run the hook again. now the user exists, so it throws an error.
+  test.throws(function () {
+    Accounts.insertUserDoc(
+      {},
+      userIn
+    );
+  });
 
-//   // now with only one of them.
-//   test.throws(function () {
-//     Accounts.insertUserDoc(
-//       {}, {emails: [{address: email1}]}
-//     );
-//   });
+  // now with only one of them.
+  test.throws(function () {
+    Accounts.insertUserDoc(
+      {}, {emails: [{address: email1}]}
+    );
+  });
 
-//   test.throws(function () {
-//     Accounts.insertUserDoc(
-//       {}, {emails: [{address: email2}]}
-//     );
-//   });
+  test.throws(function () {
+    Accounts.insertUserDoc(
+      {}, {emails: [{address: email2}]}
+    );
+  });
 
 
-//   // a third email works.
-//   var userId3 = Accounts.insertUserDoc(
-//       {}, {emails: [{address: email3}]}
-//   );
-//   var user3 = Meteor.users.findOne(userId3);
-//   test.equal(typeof user3.createdAt, 'object');
+  // a third email works.
+  var userId3 = Accounts.insertUserDoc(
+      {}, {emails: [{address: email3}]}
+  );
+  var user3 = Accounts.dbClient.getUserById(userId3);
+  test.equal(typeof user3.createdAt, 'object');
 
-//   // cleanup
-//   Meteor.users.remove(userId);
-//   Meteor.users.remove(userId3);
-// });
+  // cleanup
+  Accounts.dbClient.deleteUser(userId);
+  Accounts.dbClient.deleteUser(userId3);
+});
 
 // // More token expiration tests are in accounts-password
 // Tinytest.addAsync('accounts - expire numeric token', function (test, onComplete) {
@@ -187,75 +182,6 @@ Tinytest.add('accounts - insertUserDoc username', function (test) {
 //     }
 //   });
 //   Accounts._expireTokens(new Date(), userId);
-// });
-
-
-// // Login tokens used to be stored unhashed in the database.  We want
-// // to make sure users can still login after upgrading.
-// var insertUnhashedLoginToken = function (userId, stampedToken) {
-//   Meteor.users.update(
-//     userId,
-//     {$push: {'services.resume.loginTokens': stampedToken}}
-//   );
-// };
-
-// Tinytest.addAsync('accounts - login token', function (test, onComplete) {
-//   // Test that we can login when the database contains a leftover
-//   // old style unhashed login token.
-//   var userId1 = Accounts.insertUserDoc({}, {username: Random.id()});
-//   var stampedToken = Accounts._generateStampedLoginToken();
-//   insertUnhashedLoginToken(userId1, stampedToken);
-//   var connection = DDP.connect(Meteor.absoluteUrl());
-//   connection.call('login', {resume: stampedToken.token});
-//   connection.disconnect();
-
-//   // Steal the unhashed token from the database and use it to login.
-//   // This is a sanity check so that when we *can't* login with a
-//   // stolen *hashed* token, we know it's not a problem with the test.
-//   var userId2 = Accounts.insertUserDoc({}, {username: Random.id()});
-//   insertUnhashedLoginToken(userId2, Accounts._generateStampedLoginToken());
-//   var stolenToken = Meteor.users.findOne(userId2).services.resume.loginTokens[0].token;
-//   test.isTrue(stolenToken);
-//   connection = DDP.connect(Meteor.absoluteUrl());
-//   connection.call('login', {resume: stolenToken});
-//   connection.disconnect();
-
-//   // Now do the same thing, this time with a stolen hashed token.
-//   var userId3 = Accounts.insertUserDoc({}, {username: Random.id()});
-//   Accounts._insertLoginToken(userId3, Accounts._generateStampedLoginToken());
-//   stolenToken = Meteor.users.findOne(userId3).services.resume.loginTokens[0].hashedToken;
-//   test.isTrue(stolenToken);
-//   connection = DDP.connect(Meteor.absoluteUrl());
-//   // evil plan foiled
-//   test.throws(
-//     function () {
-//       connection.call('login', {resume: stolenToken});
-//     },
-//     /You\'ve been logged out by the server/
-//   );
-//   connection.disconnect();
-
-//   // Old style unhashed tokens are replaced by hashed tokens when
-//   // encountered.  This means that after someone logins once, the
-//   // old unhashed token is no longer available to be stolen.
-//   var userId4 = Accounts.insertUserDoc({}, {username: Random.id()});
-//   var stampedToken = Accounts._generateStampedLoginToken();
-//   insertUnhashedLoginToken(userId4, stampedToken);
-//   connection = DDP.connect(Meteor.absoluteUrl());
-//   connection.call('login', {resume: stampedToken.token});
-//   connection.disconnect();
-
-//   // The token is no longer available to be stolen.
-//   stolenToken = Meteor.users.findOne(userId4).services.resume.loginTokens[0].token;
-//   test.isFalse(stolenToken);
-
-//   // After the upgrade, the client can still login with their original
-//   // unhashed login token.
-//   connection = DDP.connect(Meteor.absoluteUrl());
-//   connection.call('login', {resume: stampedToken.token});
-//   connection.disconnect();
-
-//   onComplete();
 // });
 
 // Tinytest.addAsync(
@@ -349,43 +275,44 @@ Tinytest.add('accounts - insertUserDoc username', function (test) {
 //   }
 // );
 
-// Tinytest.add(
-//   'accounts - hook callbacks can access Meteor.userId()',
-//   function (test) {
-//     var userId = Accounts.insertUserDoc({}, { username: Random.id() });
-//     var stampedToken = Accounts._generateStampedLoginToken();
-//     Accounts._insertLoginToken(userId, stampedToken);
+Tinytest.add(
+  'accounts - hook callbacks can access Meteor.userId()',
+  function (test) {
+    var userId = Accounts.insertUserDoc({}, { username: Random.id() });
+    var stampedToken = Accounts._generateStampedLoginToken();
+    Accounts._insertLoginToken(userId, stampedToken);
 
-//     var validateStopper = Accounts.validateLoginAttempt(function(attempt) {
-//       test.equal(Meteor.userId(), validateAttemptExpectedUserId, "validateLoginAttempt");
-//       return true;
-//     });
-//     var onLoginStopper = Accounts.onLogin(function(attempt) {
-//       test.equal(Meteor.userId(), onLoginExpectedUserId, "onLogin");
-//     });
-//     var onLoginFailureStopper = Accounts.onLoginFailure(function(attempt) {
-//       test.equal(Meteor.userId(), onLoginFailureExpectedUserId, "onLoginFailure");
-//     });
+    var validateStopper = Accounts.validateLoginAttempt(function(attempt) {
+      console.log("Mmeteor.userId type", typeof Meteor.userId(), typeof validateAttemptExpectedUserId)
+      test.equal(Meteor.userId(), validateAttemptExpectedUserId, "validateLoginAttempt");
+      return true;
+    });
+    var onLoginStopper = Accounts.onLogin(function(attempt) {
+      test.equal(Meteor.userId(), onLoginExpectedUserId, "onLogin");
+    });
+    var onLoginFailureStopper = Accounts.onLoginFailure(function(attempt) {
+      test.equal(Meteor.userId(), onLoginFailureExpectedUserId, "onLoginFailure");
+    });
 
-//     var conn = DDP.connect(Meteor.absoluteUrl());
+    var conn = DDP.connect(Meteor.absoluteUrl());
 
-//     // On a new connection, Meteor.userId() should be null until logged in.
-//     var validateAttemptExpectedUserId = null;
-//     var onLoginExpectedUserId = userId;
-//     conn.call('login', { resume: stampedToken.token });
+    // On a new connection, Meteor.userId() should be null until logged in.
+    var validateAttemptExpectedUserId = null;
+    var onLoginExpectedUserId = userId;
+    conn.call('login', { resume: stampedToken.token });
 
-//     // Now that the user is logged in on the connection, Meteor.userId() should
-//     // return that user.
-//     validateAttemptExpectedUserId = userId;
-//     conn.call('login', { resume: stampedToken.token });
+    // Now that the user is logged in on the connection, Meteor.userId() should
+    // return that user.
+    validateAttemptExpectedUserId = userId;
+    conn.call('login', { resume: stampedToken.token });
 
-//     // Trigger onLoginFailure callbacks
-//     var onLoginFailureExpectedUserId = userId;
-//     test.throws(function() { conn.call('login', { resume: "bogus" }) }, '403');
+    // Trigger onLoginFailure callbacks
+    var onLoginFailureExpectedUserId = userId;
+    test.throws(function() { conn.call('login', { resume: "bogus" }) }, '403');
 
-//     conn.disconnect();
-//     validateStopper.stop();
-//     onLoginStopper.stop();
-//     onLoginFailureStopper.stop();
-//   }
-// );
+    conn.disconnect();
+    validateStopper.stop();
+    onLoginStopper.stop();
+    onLoginFailureStopper.stop();
+  }
+);

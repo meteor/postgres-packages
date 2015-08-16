@@ -16,6 +16,7 @@ PG.wrapWithTransaction = function wrapWithTransaction(func) {
           resolve(ret);
         } catch (e) {
           trx.rollback();
+          console.log("Error in promise:", e);
           reject(e);
         }
       }));
@@ -23,6 +24,10 @@ PG.wrapWithTransaction = function wrapWithTransaction(func) {
 
     console.log("after transaction");
 
-    return Promise.await(transactionRun);
+    return PG.await(transactionRun);
   };
+};
+
+PG.inTransaction = function inTransaction(func) {
+  return PG.wrapWithTransaction(func)();
 };

@@ -16,7 +16,8 @@ Package.onUse(function(api) {
   api.use([
     'simple:pg',
     'ecmascript',
-    'check'
+    'check',
+    'underscore'
   ]);
 
   api.export("AccountsDBClientPG");

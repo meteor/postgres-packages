@@ -77,7 +77,14 @@ Ap.userId = function () {
   var currentInvocation = DDP._CurrentInvocation.get();
   if (!currentInvocation)
     throw new Error("Meteor.userId can only be invoked in method calls. Use this.userId in publish functions.");
-  return currentInvocation.userId;
+
+  // XXX DDP assumes user IDs are strings
+  if (currentInvocation.userId) {
+    return parseInt(currentInvocation.userId, 10);
+  } else {
+    return currentInvocation.userId;
+  }
+
 };
 
 ///
@@ -253,7 +260,8 @@ Ap._loginUser = function (methodInvocation, userId, stampedLoginToken) {
     );
   });
 
-  methodInvocation.setUserId(userId);
+  // DDP assumes user ids are strings
+  methodInvocation.setUserId(userId + "");
 
   return {
     id: userId,
@@ -287,7 +295,7 @@ Ap._attemptLogin = function (
 
   var user;
   if (result.userId)
-    user = this.users.findOne(result.userId);
+    user = this.dbClient.getUserById(result.userId);
 
   var attempt = {
     type: result.type || "unknown",
@@ -785,14 +793,8 @@ Ap._hashStampedToken = function (stampedToken) {
 // Using $addToSet avoids getting an index error if another client
 // logging in simultaneously has already inserted the new hashed
 // token.
-Ap._insertHashedLoginToken = function (userId, hashedToken, query) {
-  query = query ? _.clone(query) : {};
-  query._id = userId;
-  this.users.update(query, {
-    $addToSet: {
-      "services.resume.loginTokens": hashedToken
-    }
-  });
+Ap._insertHashedLoginToken = function (userId, hashedToken) {
+  this.dbClient.insertHashedLoginToken(userId, hashedToken.hashedToken);
 };
 
 
@@ -938,27 +940,15 @@ function defaultResumeLoginHandler(accounts, options) {
   // First look for just the new-style hashed login token, to avoid
   // sending the unhashed token to the database in a query if we don't
   // need to.
-  var user = accounts.users.findOne(
-    {"services.resume.loginTokens.hashedToken": hashedToken});
-
-  if (! user) {
-    // If we didn't find the hashed login token, try also looking for
-    // the old-style unhashed token.  But we need to look for either
-    // the old-style token OR the new-style token, because another
-    // client connection logging in simultaneously might have already
-    // converted the token.
-    user = accounts.users.findOne({
-      $or: [
-        {"services.resume.loginTokens.hashedToken": hashedToken},
-        {"services.resume.loginTokens.token": options.resume}
-      ]
-    });
-  }
+  console.log("LOOKING FOR HASHED TOKEN", hashedToken);
+  var user = accounts.dbClient.getUserByHashedLoginToken(hashedToken);
 
   if (! user)
     return {
       error: new Meteor.Error(403, "You've been logged out by the server. Please log in again.")
     };
+
+  console.log("FOUND USER", user);
 
   // Find the token, which will either be an object with fields
   // {hashedToken, when} for a hashed token or {token, when} for an
@@ -967,14 +957,6 @@ function defaultResumeLoginHandler(accounts, options) {
   var token = _.find(user.services.resume.loginTokens, function (token) {
     return token.hashedToken === hashedToken;
   });
-  if (token) {
-    oldUnhashedStyleToken = false;
-  } else {
-    token = _.find(user.services.resume.loginTokens, function (token) {
-      return token.token === options.resume;
-    });
-    oldUnhashedStyleToken = true;
-  }
 
   var tokenExpires = accounts._tokenExpiration(token.when);
   if (new Date() >= tokenExpires)
