@@ -534,13 +534,13 @@ _.extend(QueryCompiler.prototype, {
 
   limit: function() {
     var noLimit = !this.single.limit && this.single.limit !== 0;
-    if (noLimit) return '';
-    return 'limit ' + this.formatter.parameter(this.single.limit);
+    if (noLimit) return {};
+    return {limit: this.single.limit};
   },
 
   offset: function() {
-    if (!this.single.offset) return '';
-    return 'offset ' + this.formatter.parameter(this.single.offset);
+    if (!this.single.offset) return {};
+    return {skip: this.single.offset};
   },
 
   // Compiles a `delete` query.
@@ -564,20 +564,15 @@ _.extend(QueryCompiler.prototype, {
   },
 
   order: function () {
-    return {
-      sort: {}
-    };
-  },
+    const orders = this.grouped.order || [];
+    const sort = [];
 
-  offset: function () {
+    orders.forEach(({value, direction}) =>
+      sort.push([value, (direction || 'asc').toLowerCase()])
+    );
+    
     return {
-      skip: 0
-    };
-  },
-
-  limit: function () {
-    return {
-      limit: 0
+      sort
     };
   },
 

@@ -131,4 +131,22 @@ Tinytest.add('knex - sql to mongo', (test) => {
     },
     'multiple conditions with the same operator on the same field'
   );
+
+  t(
+    Knex('t').orderBy('c'),
+    {
+      sort: [['c', 'asc']]
+    },
+    'basic sort order'
+  );
+
+  t(
+    Knex('t').orderBy('c').orderBy('d', 'desc').limit(3).offset(1),
+    {
+      sort: [['c', 'asc'], ['d', 'desc']],
+      limit: 3,
+      skip: 1
+    },
+    'basic sort order with limit and offset'
+  );
 });
