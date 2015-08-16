@@ -1,3 +1,8 @@
+if (Meteor.isServer) {
+  Knex = Npm.require('knex');
+  return;
+}
+
 function knex(tableName) {
   var qb = knex.queryBuilder();
   return qb.table(tableName);
@@ -7,7 +12,7 @@ knex.queryBuilder = function () {
   return new QueryBuilder();
 };
 
-knex.VERSION = '0.8.6-minimongo';
+knex.VERSION = '0.8.6'; // actually just a custom wrapper
 
 const methods = [
   'insert', 'update', 'select', 'delete', 'del',
@@ -779,4 +784,4 @@ Object.defineProperty(QueryCompiler.prototype, 'tableName', {
 });
 
 
-Knex = knex;
+Knex = function () { return knex; };

@@ -6,8 +6,10 @@ Tinytest.add('knex - sql to mongo', (test) => {
     });
   }
 
+  const knex = Knex();
+
   t(
-    Knex('table'),
+    knex('table'),
     {
       method: 'find',
       collection: 'table',
@@ -18,7 +20,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('table').select('field_a', 'field_b'),
+    knex('table').select('field_a', 'field_b'),
     {
       method: 'find',
       collection: 'table',
@@ -32,7 +34,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('table').where('field_a', 'some value'),
+    knex('table').where('field_a', 'some value'),
     {
       method: 'find',
       collection: 'table',
@@ -45,7 +47,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('table').where('field_a', '>', 2).where('field_b', '<=', 123),
+    knex('table').where('field_a', '>', 2).where('field_b', '<=', 123),
     {
       method: 'find',
       collection: 'table',
@@ -60,7 +62,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
 
 
   t(
-    Knex('table').where('field_a', '>', 2).where('field_a', '<=', 123).where('field_a', '<>', 5),
+    knex('table').where('field_a', '>', 2).where('field_a', '<=', 123).where('field_a', '<>', 5),
     {
       method: 'find',
       collection: 'table',
@@ -73,7 +75,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('people').select('first_name').select('last_name').where('age', '>', 18),
+    knex('people').select('first_name').select('last_name').where('age', '>', 18),
     {
       method: 'find',
       collection: 'people',
@@ -89,7 +91,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('table').where({
+    knex('table').where({
       x: 1,
       y: 2
     }),
@@ -103,7 +105,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('table').where('x', 1).orWhere('x', 3),
+    knex('table').where('x', 1).orWhere('x', 3),
     {
       selector: {
         $or: [{
@@ -116,11 +118,11 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   test.throws(() =>
-    Knex('t').where('x', '1').orWhere('y', '2').andWhere('z', 3).toMongoQuery(),
+    knex('t').where('x', '1').orWhere('y', '2').andWhere('z', 3).toMongoQuery(),
     /Ambiguous .* WHERE/);
 
   t(
-    Knex('t').where('a', '>', 1).where('a', '>', 2),
+    knex('t').where('a', '>', 1).where('a', '>', 2),
     {
       selector: {
         $and: [
@@ -133,7 +135,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('t').where(function () {
+    knex('t').where(function () {
       this.where('id', 1).andWhere('x', '>', 5);
     }).orWhere(function () {
       this.where('id', 2).andWhere('x', '<', 0);
@@ -150,7 +152,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('t').where(function () {
+    knex('t').where(function () {
       this.where('id', 1).orWhere('x', '>', 5);
     }).andWhere(function () {
       this.where('id', 2).orWhere('x', '<', 0);
@@ -167,7 +169,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('t').orderBy('c'),
+    knex('t').orderBy('c'),
     {
       sort: [['c', 'asc']]
     },
@@ -175,7 +177,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
   );
 
   t(
-    Knex('t').orderBy('c').orderBy('d', 'desc').limit(3).offset(1),
+    knex('t').orderBy('c').orderBy('d', 'desc').limit(3).offset(1),
     {
       sort: [['c', 'asc'], ['d', 'desc']],
       limit: 3,

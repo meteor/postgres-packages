@@ -6,6 +6,7 @@ Package.describe({
 
 Npm.depends({
   bookshelf: '0.8.1',
+  knex: '0.8.6',
   exposify: '0.4.3',
   bluebird: '2.9.34'
 });
@@ -14,14 +15,16 @@ Package.onUse(function(api) {
   api.versionsFrom('1.1.0.3');
   api.use('ecmascript');
   api.use('underscore');
-  api.use('promise');
+
   api.use('cosmos:browserify@0.5.0');
   api.addFiles('sync-promise.browserify.js', 'client');
   api.addFiles('bookshelf.browserify.js', 'client');
   api.addFiles('bookshelf.browserify.options.json', 'client');
-  api.addFiles('knex.js', 'client');
 
-  api.export(['Bookshelf', 'Knex'], 'client');
+  api.addFiles('knex.js');
+  api.addFiles('bookshelf.js');
+
+  api.export(['Bookshelf', 'Knex']);
 });
 
 Package.onTest(function(api) {

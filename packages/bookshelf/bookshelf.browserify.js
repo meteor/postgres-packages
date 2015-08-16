@@ -1,1 +1,1 @@
-Bookshelf = require('bookshelf');
+BrowserifyBookshelf = require('bookshelf');

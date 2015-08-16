@@ -1,1 +1,5 @@
-// Write your package code here!
+if (Meteor.isServer) {
+  Bookshelf = Npm.require('bookshelf');
+} else {
+  Bookeshelf = BrowserifyBookshelf;
+}
