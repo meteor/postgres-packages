@@ -1,21 +1,25 @@
-Todos = new Mongo.Collection('todos');
+if (Meteor.isClient) {
+  // Stuff below here is server-only
+  Todos = new Mongo.Collection('todos');
+  return;
+}
 
 Meteor.methods({
   '/todos/delete': function (todoId) {
-    var todo = Todos.findOne(todoId);
+    PG.await(PG.knex("todos").delete().where({id: todoId}));
 
-    Todos.remove(todoId);
-    if (! todo.checked) {
-      Lists.update(todo.listId, {$inc: {incompleteCount: -1}});
-    }
+    // We would want the below for optimistic UI
+    // if (! todo.checked) {
+    //   Lists.update(todo.listId, {$inc: {incompleteCount: -1}});
+    // }
   },
   '/todos/setChecked': function (todoId, checked) {
-    var todo = Todos.findOne(todoId);
+    PG.await(PG.knex("todos").update({checked: checked}).where({id: todoId}));
 
-    Todos.update(todoId, {$set: {checked: checked}});
-    Lists.update(todo.listId, {$inc: {incompleteCount: checked ? -1 : 1}});
+    // We would want the below for optimistic UI
+    // Lists.update(todo.listId, {$inc: {incompleteCount: checked ? -1 : 1}});
   },
   '/todos/setText': function (todoId, newText) {
-    Todos.update(todoId, {$set: {text: newText}});
+    PG.await(PG.knex("todos").update({text: newText}).where({id: todoId}));
   }
 });

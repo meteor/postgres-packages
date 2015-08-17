@@ -9,12 +9,14 @@ Migrations.runIfEnvSet = function (envVar = "RUN_MIGRATIONS") {
     process.exit(0);
   } else {
     const lastMigrationVersion = _.last(Migrations._list).version;
-    if (Migrations.getVersion() < lastMigrationVersion) {
-      console.log(`=> You have some migrations that haven't been run yet.
-   Most recent version run: ${lastMigrationVersion}.
+    try {
+      if (Migrations.getVersion() < lastMigrationVersion) {
+        console.log(`=> You have some migrations that haven't been run yet.
+     Most recent version run: ${lastMigrationVersion}.
 
-   You should consider running migrations with the following command:
-     ${envVar}=latest meteor`);
-    }
+     You should consider running migrations with the following command:
+       ${envVar}=latest meteor`);
+      }
+    } catch (e) {}
   }
 }

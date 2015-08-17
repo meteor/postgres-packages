@@ -302,4 +302,4 @@ Migrations.add({
   down: PG.wrapWithTransaction(AccountsDBClientPG.migrations.down)
 });
 
-Migrations.runIfEnvSet("ACCOUNTS_MIGRATIONS");
+//Migrations.runIfEnvSet("ACCOUNTS_MIGRATIONS");

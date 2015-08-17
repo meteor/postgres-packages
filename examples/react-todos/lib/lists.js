@@ -1,33 +1,27 @@
-Lists = new Mongo.Collection('lists');
+if (Meteor.isClient) {
+  // Stuff below here is server-only
+  Lists = new Mongo.Collection('lists');
+  return;
+}
 
-// Calculate a default name for a list in the form of 'List A'
-Lists.defaultName = function() {
-  var nextLetter = 'A', nextName = 'List ' + nextLetter;
-  while (Lists.findOne({name: nextName})) {
-    // not going to be too smart here, can go past Z
-    nextLetter = String.fromCharCode(nextLetter.charCodeAt(0) + 1);
-    nextName = 'List ' + nextLetter;
-  }
+  // // Calculate a default name for a list in the form of 'List A'
+  // function defaultName() {
+  //   var nextLetter = 'A', nextName = 'List ' + nextLetter;
+  //   while (Lists.findOne({name: nextName})) {
+  //     // not going to be too smart here, can go past Z
+  //     nextLetter = String.fromCharCode(nextLetter.charCodeAt(0) + 1);
+  //     nextName = 'List ' + nextLetter;
+  //   }
 
-  return nextName;
-};
+  //   return nextName;
+  // };
 
 Meteor.methods({
   '/lists/add': function () {
-    var list = {
-      name: Lists.defaultName(),
-      incompleteCount: 0,
-      createdAt: new Date()
-    };
-
-    var listId = Lists.insert(list);
-
-    return listId;
+    return PG.await(PG.knex("lists").insert({}).returning("id"))[0];
   },
   '/lists/updateName': function (listId, newName) {
-    Lists.update(listId, {
-      $set: { name: newName }
-    });
+    PG.await(PG.knex("lists").update({name: newName}).where({id: listId}));
   },
   '/lists/togglePrivate': function (listId) {
     var list = Lists.findOne(listId);
@@ -62,13 +56,12 @@ Meteor.methods({
     Lists.remove(list._id);
   },
   '/lists/addTask': function (listId, newTaskText) {
-    Todos.insert({
-      listId: listId,
+    PG.await(PG.knex("todos").insert({
+      list_id: listId,
       text: newTaskText,
-      checked: false,
-      createdAt: new Date()
-    });
+      checked: false
+    }));
 
-    Lists.update(listId, {$inc: {incompleteCount: 1}});
+    // Lists.update(listId, {$inc: {incompleteCount: 1}});
   }
 });

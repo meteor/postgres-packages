@@ -8,14 +8,14 @@ TodoListPage = React.createClass({
 
   getMeteorData() {
     // Get list ID from ReactRouter
-    const listId = this.getParams().listId;
+    const listId = parseInt(this.getParams().listId, 10);
 
     // Subscribe to the tasks we need to render this component
     const tasksSubHandle = Meteor.subscribe("todos", listId);
 
     return {
-      tasks: Todos.find({ listId: listId }, {sort: {createdAt : -1}}).fetch(),
-      list: Lists.findOne({ _id: listId }),
+      tasks: Todos.find({ list_id: listId }, {sort: {created_at : -1}}).fetch(),
+      list: Lists.findOne({ id: listId }),
       tasksLoading: ! tasksSubHandle.ready()
     };
   },
