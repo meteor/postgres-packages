@@ -12,36 +12,38 @@ Meteor.methods({
     PG.await(PG.knex("lists").update({name: newName}).where({id: listId}));
   },
   '/lists/togglePrivate': function (listId) {
-    var list = Lists.findOne(listId);
+    var list = PG.await(PG.knex("lists").where({id: listId}));
 
-    if (! Meteor.user()) {
+    if (! Meteor.userId()) {
       throw new Meteor.Error("not-logged-in");
     }
 
-    if (list.userId) {
-      Lists.update(list._id, {$unset: {userId: true}});
+    if (list.user_id) {
+      PG.await(PG.knex("lists").where({id: listId}).update({user_id: null}));
     } else {
       // ensure the last public list cannot be made private
-      if (Lists.find({userId: {$exists: false}}).count() === 1) {
+      if (! list.user_id && PG.await(PG.knex("lists").count("*").whereNull("user_id"))[0].count == 1) {
         throw new Meteor.Error("final-list-private");
       }
 
-      Lists.update(list._id, {$set: {userId: Meteor.userId()}});
+      PG.await(PG.knex("lists").where({id: listId}).update({user_id: Meteor.userId()}));
     }
   },
   '/lists/delete': function (listId) {
-    var list = Lists.findOne(listId);
+    var list = PG.await(PG.knex("lists").where({id: listId}));
 
     // ensure the last public list cannot be deleted.
-    if (! list.userId && Lists.find({userId: {$exists: false}}).count() === 1) {
+    if (! list.user_id && PG.await(PG.knex("lists").count("*").whereNull("user_id"))[0].count == 1) {
       throw new Meteor.Error("final-list-delete");
     }
 
-    // Make sure to delete all of the items
-    Todos.remove({listId: list._id});
+    PG.inTransaction(() => {
+      // Make sure to delete all of the items
+      PG.await(PG.knex("todos").where({list_id: listId}).delete());
 
-    // Delete the list itself
-    Lists.remove(list._id);
+      // Delete the list itself
+      PG.await(PG.knex("lists").where({id: listId}).delete());
+    });
   },
   '/lists/addTask': function (listId, newTaskText) {
     PG.await(PG.knex("todos").insert({
