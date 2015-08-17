@@ -1,5 +1,5 @@
-Migrations.runIfEnvSet = function () {
-  if (process.env.RUN_MIGRATIONS) {
+Migrations.runIfEnvSet = function (envVar = "RUN_MIGRATIONS") {
+  if (process.env[envVar]) {
     // Since we have transactions, we don't need to lock stuff
     Migrations._collection.update({_id:"control"}, {$set:{"locked":false}});
 
@@ -14,7 +14,7 @@ Migrations.runIfEnvSet = function () {
    Most recent version run: ${lastMigrationVersion}.
 
    You should consider running migrations with the following command:
-     RUN_MIGRATIONS=latest meteor`);
+     ${envVar}=latest meteor`);
     }
   }
 }

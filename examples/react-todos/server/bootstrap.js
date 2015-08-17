@@ -1,6 +1,6 @@
 // if the database is empty on server start, create some sample data.
 Meteor.startup(function () {
-  if (Lists.find().count() === 0) {
+  if (PG.await(PG.knex("lists").count("*"))[0].count == 0) {
     var data = [
       {name: "Meteor Principles",
        items: ["Data on the Wire",
@@ -36,14 +36,21 @@ Meteor.startup(function () {
     ];
 
     var timestamp = (new Date()).getTime();
+
     _.each(data, function(list) {
-      var list_id = Lists.insert({name: list.name,
-        incompleteCount: list.items.length});
+
+      var list_id = PG.await(PG.knex("lists").insert({
+        name: list.name
+      }).returning("id"))[0];
 
       _.each(list.items, function(text) {
-        Todos.insert({listId: list_id,
-                      text: text,
-                      createdAt: new Date(timestamp)});
+        PG.await(PG.knex("todos").insert({
+          list_id: list_id,
+          text: text,
+          created_at: new Date(timestamp),
+          checked: false
+        }));
+
         timestamp += 1; // ensure unique timestamp.
       });
     });
