@@ -1,6 +1,3 @@
-// PG.wrapWithTransaction(AccountsDBClientPG.migrations.up)();
-// console.log("ran migration");
-
 Meteor.methods({
   getCurrentLoginToken: function () {
     return Accounts._getLoginToken(this.connection.id);
@@ -66,8 +63,6 @@ Tinytest.add('accounts - updateOrCreateUserFromExternalService - Weibo', functio
   var uid2 = Accounts.updateOrCreateUserFromExternalService(
     'weibo', {id: weiboId2}).userId;
 
-  console.log(uid2, uid1);
-
   test.notEqual(uid1, uid2);
 
   // cleanup
@@ -116,7 +111,6 @@ Tinytest.add('accounts - insertUserDoc email', function (test) {
   var userOut = Accounts.dbClient.getUserById(userId);
 
   test.equal(typeof userOut.createdAt, 'object');
-  console.log(userOut, userIn);
   test.equal(userOut.emails, userIn.emails);
 
   // run the hook again with the exact same emails.
@@ -283,7 +277,6 @@ Tinytest.add(
     Accounts._insertLoginToken(userId, stampedToken);
 
     var validateStopper = Accounts.validateLoginAttempt(function(attempt) {
-      console.log("Mmeteor.userId type", typeof Meteor.userId(), typeof validateAttemptExpectedUserId)
       test.equal(Meteor.userId(), validateAttemptExpectedUserId, "validateLoginAttempt");
       return true;
     });

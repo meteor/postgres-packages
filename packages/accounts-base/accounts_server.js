@@ -1,3 +1,7 @@
+// PG.wrapWithTransaction(AccountsDBClientPG.migrations.up)();
+// console.log("ran migration");
+// process.exit(0);
+
 var crypto = Npm.require('crypto');
 
 // @summary Constructor for the Accounts namespace on the server. Note
@@ -465,16 +469,7 @@ Ap._runLoginHandlers = function (methodInvocation, options) {
 // in the process of becoming associated with hashed tokens and then
 // they'll get closed.
 Ap.destroyToken = function (userId, loginToken) {
-  this.users.update(userId, {
-    $pull: {
-      "services.resume.loginTokens": {
-        $or: [
-          { hashedToken: loginToken },
-          { token: loginToken }
-        ]
-      }
-    }
-  });
+  this.dbClient.removeHashedLoginToken(userId, loginToken);
 };
 
 Ap._initServerMethods = function () {
@@ -667,67 +662,129 @@ Ap._initAccountDataHooks = function () {
 Ap._initServerPublications = function () {
   var accounts = this;
 
-  // Publish all login service configuration fields other than secret.
-  accounts._server.publish("meteor.loginServiceConfiguration", function () {
-    var ServiceConfiguration =
-      Package['service-configuration'].ServiceConfiguration;
-    return ServiceConfiguration.configurations.find({}, {fields: {secret: 0}});
-  }, {is_auto: true}); // not techincally autopublish, but stops the warning.
+  // // Publish all login service configuration fields other than secret.
+  // accounts._server.publish("meteor.loginServiceConfiguration", function () {
+  //   var ServiceConfiguration =
+  //     Package['service-configuration'].ServiceConfiguration;
+  //   return ServiceConfiguration.configurations.find({}, {fields: {secret: 0}});
+  // }, {is_auto: true}); // not techincally autopublish, but stops the warning.
 
-  // Publish the current user's record to the client.
   accounts._server.publish(null, function () {
-    if (this.userId) {
-      return accounts.users.find({
-        _id: this.userId
-      }, {
-        fields: {
-          profile: 1,
-          username: 1,
-          emails: 1
-        }
-      });
-    } else {
+    if (! this.userId) {
       return null;
     }
-  }, /*suppress autopublish warning*/{is_auto: true});
 
-  // Use Meteor.startup to give other packages a chance to call
-  // addAutopublishFields.
-  Package.autopublish && Meteor.startup(function () {
-    // ['profile', 'username'] -> {profile: 1, username: 1}
-    var toFieldSelector = function (fields) {
-      return _.object(_.map(fields, function (field) {
-        return [field, 1];
-      }));
-    };
+    const userId = parseInt(this.userId, 10);
 
-    accounts._server.publish(null, function () {
-      if (this.userId) {
-        return accounts.users.find({
-          _id: this.userId
-        }, {
-          fields: toFieldSelector(accounts._autopublishFields.loggedInUser)
-        });
-      } else {
-        return null;
-      }
-    }, /*suppress autopublish warning*/{is_auto: true});
+    const subscription = this;
 
-    // XXX this publish is neither dedup-able nor is it optimized by our special
-    // treatment of queries on a specific _id. Therefore this will have O(n^2)
-    // run-time performance every time a user document is changed (eg someone
-    // logging in). If this is a problem, we can instead write a manual publish
-    // function which filters out fields based on 'this.userId'.
-    accounts._server.publish(null, function () {
-      var selector = this.userId ? {
-        _id: { $ne: this.userId }
-      } : {};
+    var userAdded = false;
 
-      return accounts.users.find(selector, {
-        fields: toFieldSelector(accounts._autopublishFields.otherUsers)
+    console.log("query:", PG.knex
+        .select("*")
+        .from("users")
+        .where("id", userId)
+        .toString());
+    const obUser = new PG.Query(
+      PG.knex
+        .select("*")
+        .from("users")
+        .where("id", userId)
+        .toString(),
+      'things').observe({
+        added: Meteor.bindEnvironment(userChanged),
+        changed: Meteor.bindEnvironment(userChanged),
+        removed: Meteor.bindEnvironment(userRemoved)
       });
-    }, /*suppress autopublish warning*/{is_auto: true});
-  });
+
+    const obUserServices = new PG.Query(
+      PG.knex
+        .select("*")
+        .from("users_services")
+        .where("user_id", userId)
+        .toString(),
+      'things').observe({
+        added: Meteor.bindEnvironment(userChanged),
+        changed: Meteor.bindEnvironment(userChanged),
+        removed: Meteor.bindEnvironment(userChanged)
+      });
+
+    const obUserEmails = new PG.Query(
+      PG.knex
+        .select("*")
+        .from("users_emails")
+        .where("user_id", userId)
+        .toString(),
+      'things').observe({
+        added: Meteor.bindEnvironment(userChanged),
+        changed: Meteor.bindEnvironment(userChanged),
+        removed: Meteor.bindEnvironment(userChanged)
+      });
+
+    function userChanged(newDoc) {
+      console.log("what")
+      if (userAdded) {
+        // user changed
+        var user = accounts.dbClient.getUserById(userId);
+        subscription.changed("users", subscription.userId, user);
+        console.log("CHANGED USER ON THE SERVER", user);
+      } else {
+        userAdded = true;
+        var user = accounts.dbClient.getUserById(userId);
+        subscription.added("users", subscription.userId, user);
+        console.log("ADDED USER ON THE SERVER", user);
+      }
+    }
+
+    function userRemoved() {
+      throw new Error("WTF")
+    }
+
+    subscription.onStop(function () {
+      obUser.stop();
+      obUserServices.stop();
+      obUserEmails.stop();
+      userAdded = false;
+    });
+  }, {is_auto: true});
+
+  // // Use Meteor.startup to give other packages a chance to call
+  // // addAutopublishFields.
+  // Package.autopublish && Meteor.startup(function () {
+  //   // ['profile', 'username'] -> {profile: 1, username: 1}
+  //   var toFieldSelector = function (fields) {
+  //     return _.object(_.map(fields, function (field) {
+  //       return [field, 1];
+  //     }));
+  //   };
+
+  //   accounts._server.publish(null, function () {
+  //     if (this.userId) {
+  //       return accounts.users.find({
+  //         _id: this.userId
+  //       }, {
+  //         fields: toFieldSelector(accounts._autopublishFields.loggedInUser)
+  //       });
+  //     } else {
+  //       return null;
+  //     }
+  //   }, /*suppress autopublish warning*/{is_auto: true});
+
+  //   // XXX this publish is neither dedup-able nor is it optimized by our special
+  //   // treatment of queries on a specific _id. Therefore this will have O(n^2)
+  //   // run-time performance every time a user document is changed (eg someone
+  //   // logging in). If this is a problem, we can instead write a manual publish
+  //   // function which filters out fields based on 'this.userId'.
+  //   accounts._server.publish(null, function () {
+  //     var selector = this.userId ? {
+  //       _id: { $ne: this.userId }
+  //     } : {};
+
+  //     return accounts.users.find(selector, {
+  //       fields: toFieldSelector(accounts._autopublishFields.otherUsers)
+  //     });
+  //   }, /*suppress autopublish warning*/{is_auto: true});
+  // });
 };
 
 // Add to the list of fields or subfields to be automatically
@@ -851,75 +908,76 @@ Ap._setLoginToken = function (userId, connection, newToken) {
   self._removeTokenFromConnection(connection.id);
   self._setAccountData(connection.id, 'loginToken', newToken);
 
-  if (newToken) {
-    // Set up an observe for this token. If the token goes away, we need
-    // to close the connection.  We defer the observe because there's
-    // no need for it to be on the critical path for login; we just need
-    // to ensure that the connection will get closed at some point if
-    // the token gets deleted.
-    //
-    // Initially, we set the observe for this connection to a number; this
-    // signifies to other code (which might run while we yield) that we are in
-    // the process of setting up an observe for this connection. Once the
-    // observe is ready to go, we replace the number with the real observe
-    // handle (unless the placeholder has been deleted or replaced by a
-    // different placehold number, signifying that the connection was closed
-    // already -- in this case we just clean up the observe that we started).
-    var myObserveNumber = ++self._nextUserObserveNumber;
-    self._userObservesForConnections[connection.id] = myObserveNumber;
-    Meteor.defer(function () {
-      // If something else happened on this connection in the meantime (it got
-      // closed, or another call to _setLoginToken happened), just do
-      // nothing. We don't need to start an observe for an old connection or old
-      // token.
-      if (self._userObservesForConnections[connection.id] !== myObserveNumber) {
-        return;
-      }
+  // XXX not implemented in PG version :]
+  // if (newToken) {
+  //   // Set up an observe for this token. If the token goes away, we need
+  //   // to close the connection.  We defer the observe because there's
+  //   // no need for it to be on the critical path for login; we just need
+  //   // to ensure that the connection will get closed at some point if
+  //   // the token gets deleted.
+  //   //
+  //   // Initially, we set the observe for this connection to a number; this
+  //   // signifies to other code (which might run while we yield) that we are in
+  //   // the process of setting up an observe for this connection. Once the
+  //   // observe is ready to go, we replace the number with the real observe
+  //   // handle (unless the placeholder has been deleted or replaced by a
+  //   // different placehold number, signifying that the connection was closed
+  //   // already -- in this case we just clean up the observe that we started).
+  //   var myObserveNumber = ++self._nextUserObserveNumber;
+  //   self._userObservesForConnections[connection.id] = myObserveNumber;
+  //   Meteor.defer(function () {
+  //     // If something else happened on this connection in the meantime (it got
+  //     // closed, or another call to _setLoginToken happened), just do
+  //     // nothing. We don't need to start an observe for an old connection or old
+  //     // token.
+  //     if (self._userObservesForConnections[connection.id] !== myObserveNumber) {
+  //       return;
+  //     }
 
-      var foundMatchingUser;
-      // Because we upgrade unhashed login tokens to hashed tokens at
-      // login time, sessions will only be logged in with a hashed
-      // token. Thus we only need to observe hashed tokens here.
-      var observe = self.users.find({
-        _id: userId,
-        'services.resume.loginTokens.hashedToken': newToken
-      }, { fields: { _id: 1 } }).observeChanges({
-        added: function () {
-          foundMatchingUser = true;
-        },
-        removed: function () {
-          connection.close();
-          // The onClose callback for the connection takes care of
-          // cleaning up the observe handle and any other state we have
-          // lying around.
-        }
-      });
+  //     var foundMatchingUser;
+  //     // Because we upgrade unhashed login tokens to hashed tokens at
+  //     // login time, sessions will only be logged in with a hashed
+  //     // token. Thus we only need to observe hashed tokens here.
+  //     var observe = self.users.find({
+  //       _id: userId,
+  //       'services.resume.loginTokens.hashedToken': newToken
+  //     }, { fields: { _id: 1 } }).observeChanges({
+  //       added: function () {
+  //         foundMatchingUser = true;
+  //       },
+  //       removed: function () {
+  //         connection.close();
+  //         // The onClose callback for the connection takes care of
+  //         // cleaning up the observe handle and any other state we have
+  //         // lying around.
+  //       }
+  //     });
 
-      // If the user ran another login or logout command we were waiting for the
-      // defer or added to fire (ie, another call to _setLoginToken occurred),
-      // then we let the later one win (start an observe, etc) and just stop our
-      // observe now.
-      //
-      // Similarly, if the connection was already closed, then the onClose
-      // callback would have called _removeTokenFromConnection and there won't
-      // be an entry in _userObservesForConnections. We can stop the observe.
-      if (self._userObservesForConnections[connection.id] !== myObserveNumber) {
-        observe.stop();
-        return;
-      }
+  //     // If the user ran another login or logout command we were waiting for the
+  //     // defer or added to fire (ie, another call to _setLoginToken occurred),
+  //     // then we let the later one win (start an observe, etc) and just stop our
+  //     // observe now.
+  //     //
+  //     // Similarly, if the connection was already closed, then the onClose
+  //     // callback would have called _removeTokenFromConnection and there won't
+  //     // be an entry in _userObservesForConnections. We can stop the observe.
+  //     if (self._userObservesForConnections[connection.id] !== myObserveNumber) {
+  //       observe.stop();
+  //       return;
+  //     }
 
-      self._userObservesForConnections[connection.id] = observe;
+  //     self._userObservesForConnections[connection.id] = observe;
 
-      if (! foundMatchingUser) {
-        // We've set up an observe on the user associated with `newToken`,
-        // so if the new token is removed from the database, we'll close
-        // the connection. But the token might have already been deleted
-        // before we set up the observe, which wouldn't have closed the
-        // connection because the observe wasn't running yet.
-        connection.close();
-      }
-    });
-  }
+  //     if (! foundMatchingUser) {
+  //       // We've set up an observe on the user associated with `newToken`,
+  //       // so if the new token is removed from the database, we'll close
+  //       // the connection. But the token might have already been deleted
+  //       // before we set up the observe, which wouldn't have closed the
+  //       // connection because the observe wasn't running yet.
+  //       connection.close();
+  //     }
+  //   });
+  // }
 };
 
 function setupDefaultLoginHandlers(accounts) {
@@ -940,15 +998,12 @@ function defaultResumeLoginHandler(accounts, options) {
   // First look for just the new-style hashed login token, to avoid
   // sending the unhashed token to the database in a query if we don't
   // need to.
-  console.log("LOOKING FOR HASHED TOKEN", hashedToken);
   var user = accounts.dbClient.getUserByHashedLoginToken(hashedToken);
 
   if (! user)
     return {
       error: new Meteor.Error(403, "You've been logged out by the server. Please log in again.")
     };
-
-  console.log("FOUND USER", user);
 
   // Find the token, which will either be an object with fields
   // {hashedToken, when} for a hashed token or {token, when} for an
@@ -1318,10 +1373,7 @@ Ap.updateOrCreateUserFromExternalService = function (
     selector[serviceIdKey] = serviceData.id;
   }
 
-  console.log("selector!", selector);
-
   var user = this.dbClient.getUserByServiceIdAndName(serviceName, serviceData.id);
-  console.log("found user!", user);
 
   if (user) {
     pinEncryptedFieldsToUser(serviceData, user._id);

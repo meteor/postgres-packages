@@ -11,12 +11,12 @@ Package.describe({
 });
 
 Package.onUse(function(api) {
+  api.use([
+    'simple:pg',
+    'accounts-base-pg-driver',
+    'ecmascript'
+  ], "server");
+
   api.versionsFrom('1.1.0.3');
   api.addFiles('accounts-password-pg-driver.js');
-});
-
-Package.onTest(function(api) {
-  api.use('tinytest');
-  api.use('accounts-password-pg-driver');
-  api.addFiles('accounts-password-pg-driver-tests.js');
 });

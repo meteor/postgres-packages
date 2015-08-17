@@ -1,6 +1,6 @@
 Package.describe({
   summary: "Password support for accounts",
-  version: "1.1.2-plugins.0"
+  version: "1.1.2-rc.0"
 });
 
 Package.onUse(function(api) {
@@ -11,7 +11,8 @@ Package.onUse(function(api) {
     'srp',
     'sha',
     'ejson',
-    'ddp'
+    'ddp',
+    'accounts-password-pg-driver'
   ], ['client', 'server']);
 
   // Export Accounts (etc) to packages using this one.
@@ -33,6 +34,4 @@ Package.onTest(function(api) {
            'ddp']);
   api.addFiles('password_tests_setup.js', 'server');
   api.addFiles('password_tests.js', ['client', 'server']);
-  api.addFiles('email_tests_setup.js', 'server');
-  api.addFiles('email_tests.js', 'client');
 });

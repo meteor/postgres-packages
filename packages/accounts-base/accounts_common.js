@@ -20,6 +20,12 @@ AccountsCommon = function _AccountsCommon(options) {
       _preventAutopublish: true,
       connection: this.connection
     });
+
+    var self = this;
+
+    Tracker.autorun(function () {
+      console.log(self.users.find().fetch());
+    })
   }
 
   // Callback exceptions are printed with Meteor._debug and ignored.
@@ -45,8 +51,11 @@ Ap.userId = function () {
 };
 
 Ap.user = function () {
+  console.log("Hello!");
   var userId = this.userId();
-  return userId ? this.users.findOne(userId) : null;
+  console.log(userId);
+  console.log(this.users.find().fetch());
+  return userId ? this.users.findOne(userId + "") : null;
 };
 
 // Note that Accounts is defined separately in accounts_client.js and

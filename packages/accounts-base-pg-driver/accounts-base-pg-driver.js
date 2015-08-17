@@ -34,9 +34,8 @@ AccountsDBClientPG = class AccountsDBClientPG {
     // accounts-password somehow needs to be able to register more fields to add
     // here, like emails and username
     // XXX but for now we hard-code it
-    if (serviceData.password) {
+    if (serviceData.password && serviceData.password.username) {
       fullUserDoc.username = serviceData.password.username;
-      delete serviceData.password;
     }
 
     fullUserDoc.services = serviceData;
@@ -76,7 +75,6 @@ AccountsDBClientPG = class AccountsDBClientPG {
 
   // Timestamp is optional
   insertHashedLoginToken(userId, token, timestamp) {
-    console.log("INSERTING TOKEN", token);
     PG.inTransaction(() => {
       PG.await(PG.knex("users_services").insert({
         user_id: userId,
@@ -87,6 +85,15 @@ AccountsDBClientPG = class AccountsDBClientPG {
         created_at: new Date(timestamp)
       }));
     });
+  }
+
+  removeHashedLoginToken(userId, token) {
+    PG.await(PG.knex("users_services").where({
+      user_id: userId,
+      service_name: "resume",
+      key: "loginTokens",
+      value: token
+    }).delete());
   }
 
   // XXX should be in facebook package or something
@@ -154,14 +161,12 @@ AccountsDBClientPG = class AccountsDBClientPG {
     // accounts-password should really be a service, so we will move
     // username to a service field
     if (fullUserDoc.username) {
-      fullUserDoc.services.password = {
-        username: fullUserDoc.username
-      };
+      fullUserDoc.services.password = fullUserDoc.services.password || {};
+      fullUserDoc.services.password.username = fullUserDoc.username;
     }
 
     let userId;
     PG.inTransaction(() => {
-      console.log("started transaction inserting user:", fullUserDoc)
       userId = this.insertUser();
 
       if (! _.isEmpty(fullUserDoc.emails)) {
@@ -219,6 +224,8 @@ AccountsDBClientPG = class AccountsDBClientPG {
         record.id_if_not_unique = 0;
       }
 
+      console.log(record);
+
       return record;
     });
 
@@ -254,6 +261,8 @@ AccountsDBClientPG.migrations.up = function () {
   PG.await(PG.knex.raw("CREATE SEQUENCE users_services_id_seq"));
 
   PG.await(PG.knex.schema.createTable("users_services", (table) => {
+    table.increments(); // integer id
+
     // XXX POSTGRES
     table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
 
@@ -269,6 +278,8 @@ AccountsDBClientPG.migrations.up = function () {
   }));
 
   PG.await(PG.knex.schema.createTable("users_emails", (table) => {
+    table.increments(); // integer id
+
     // XXX POSTGRES
     table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
 

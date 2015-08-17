@@ -85,35 +85,13 @@ var checkPassword = Accounts._checkPassword;
 // @returns A user if found, else null
 var findUserFromQuery = function (query) {
   var user = null;
-
+  console.log(Accounts.dbClient)
   if (query.id) {
     user = Meteor.users.findOne({ _id: query.id });
-  } else {
-    var fieldName;
-    var fieldValue;
-    if (query.username) {
-      fieldName = 'username';
-      fieldValue = query.username;
-    } else if (query.email) {
-      fieldName = 'emails.address';
-      fieldValue = query.email;
-    } else {
-      throw new Error("shouldn't happen (validation missed something)");
-    }
-    var selector = {};
-    selector[fieldName] = fieldValue;
-    user = Meteor.users.findOne(selector);
-    // If user is not found, try a case insensitive lookup
-    if (!user) {
-      selector = selectorForFastCaseInsensitiveLookup(fieldName, fieldValue);
-      var candidateUsers = Meteor.users.find(selector).fetch();
-      // No match if multiple candidates are found
-      if (candidateUsers.length === 1) {
-        user = candidateUsers[0];
-      } else {
-        console.error('Found multiple users with ' + fieldName + ' = ' + fieldValue + ' only differing in case. Requiring case sensitive login.');
-      }
-    }
+  } else if (query.username) {
+    user = Accounts.dbClient.getUserByUsername(query.username);
+  } else if (query.email) {
+    user = Accounts.dbClient.getUserByEmail(query.email);
   }
 
   return user;
@@ -631,80 +609,81 @@ Meteor.methods({resetPassword: function (token, newPassword) {
   );
 }});
 
-///
-/// EMAIL VERIFICATION
-///
+// ///
+// /// EMAIL VERIFICATION
+// ///
 
 
-// send the user an email with a link that when opened marks that
-// address as verified
+// // send the user an email with a link that when opened marks that
+// // address as verified
 
-/**
- * @summary Send an email with a link the user can use verify their email address.
- * @locus Server
- * @param {String} userId The id of the user to send email to.
- * @param {String} [email] Optional. Which address of the user's to send the email to. This address must be in the user's `emails` list. Defaults to the first unverified email in the list.
- */
-Accounts.sendVerificationEmail = function (userId, address) {
-  // XXX Also generate a link using which someone can delete this
-  // account if they own said address but weren't those who created
-  // this account.
+// /**
+//  * @summary Send an email with a link the user can use verify their email address.
+//  * @locus Server
+//  * @param {String} userId The id of the user to send email to.
+//  * @param {String} [email] Optional. Which address of the user's to send the email to. This address must be in the user's `emails` list. Defaults to the first unverified email in the list.
+//  */
+// Accounts.sendVerificationEmail = function (userId, address) {
+//   // XXX Also generate a link using which someone can delete this
+//   // account if they own said address but weren't those who created
+//   // this account.
 
-  // Make sure the user exists, and address is one of their addresses.
-  var user = Meteor.users.findOne(userId);
-  if (!user)
-    throw new Error("Can't find user");
-  // pick the first unverified address if we weren't passed an address.
-  if (!address) {
-    var email = _.find(user.emails || [],
-                       function (e) { return !e.verified; });
-    address = (email || {}).address;
-  }
-  // make sure we have a valid address
-  if (!address || !_.contains(_.pluck(user.emails || [], 'address'), address))
-    throw new Error("No such email address for user.");
+//   // Make sure the user exists, and address is one of their addresses.
+//   var user = Accounts.dbClient.getUserById(userId);
+//   if (!user)
+//     throw new Error("Can't find user");
+//   // pick the first unverified address if we weren't passed an address.
+//   if (!address) {
+//     var email = _.find(user.emails || [],
+//                        function (e) { return !e.verified; });
+//     address = (email || {}).address;
+//   }
+//   // make sure we have a valid address
+//   if (!address || !_.contains(_.pluck(user.emails || [], 'address'), address))
+//     throw new Error("No such email address for user.");
 
 
-  var tokenRecord = {
-    token: Random.secret(),
-    address: address,
-    when: new Date()};
-  Meteor.users.update(
-    {_id: userId},
-    {$push: {'services.email.verificationTokens': tokenRecord}});
+//   var tokenRecord = {
+//     token: Random.secret(),
+//     address: address,
+//     when: new Date()};
 
-  // before passing to template, update user object with new token
-  Meteor._ensure(user, 'services', 'email');
-  if (!user.services.email.verificationTokens) {
-    user.services.email.verificationTokens = [];
-  }
-  user.services.email.verificationTokens.push(tokenRecord);
+//   Meteor.users.update(
+//     {_id: userId},
+//     {$push: {'services.email.verificationTokens': tokenRecord}});
 
-  var verifyEmailUrl = Accounts.urls.verifyEmail(tokenRecord.token);
+//   // before passing to template, update user object with new token
+//   Meteor._ensure(user, 'services', 'email');
+//   if (!user.services.email.verificationTokens) {
+//     user.services.email.verificationTokens = [];
+//   }
+//   user.services.email.verificationTokens.push(tokenRecord);
 
-  var options = {
-    to: address,
-    from: Accounts.emailTemplates.verifyEmail.from
-      ? Accounts.emailTemplates.verifyEmail.from(user)
-      : Accounts.emailTemplates.from,
-    subject: Accounts.emailTemplates.verifyEmail.subject(user)
-  };
+//   var verifyEmailUrl = Accounts.urls.verifyEmail(tokenRecord.token);
 
-  if (typeof Accounts.emailTemplates.verifyEmail.text === 'function') {
-    options.text =
-      Accounts.emailTemplates.verifyEmail.text(user, verifyEmailUrl);
-  }
+//   var options = {
+//     to: address,
+//     from: Accounts.emailTemplates.verifyEmail.from
+//       ? Accounts.emailTemplates.verifyEmail.from(user)
+//       : Accounts.emailTemplates.from,
+//     subject: Accounts.emailTemplates.verifyEmail.subject(user)
+//   };
 
-  if (typeof Accounts.emailTemplates.verifyEmail.html === 'function')
-    options.html =
-      Accounts.emailTemplates.verifyEmail.html(user, verifyEmailUrl);
+//   if (typeof Accounts.emailTemplates.verifyEmail.text === 'function') {
+//     options.text =
+//       Accounts.emailTemplates.verifyEmail.text(user, verifyEmailUrl);
+//   }
 
-  if (typeof Accounts.emailTemplates.headers === 'object') {
-    options.headers = Accounts.emailTemplates.headers;
-  }
+//   if (typeof Accounts.emailTemplates.verifyEmail.html === 'function')
+//     options.html =
+//       Accounts.emailTemplates.verifyEmail.html(user, verifyEmailUrl);
 
-  Email.send(options);
-};
+//   if (typeof Accounts.emailTemplates.headers === 'object') {
+//     options.headers = Accounts.emailTemplates.headers;
+//   }
+
+//   Email.send(options);
+// };
 
 // Take token from sendVerificationEmail, mark the email as verified,
 // and log them in.
@@ -794,39 +773,31 @@ var createUser = function (options) {
   if (email)
     user.emails = [{address: email, verified: false}];
 
-  // Check if there is no other user with a username or email only differing
-  // in case.
-  var performCaseInsensitiveCheck = function () {
-    // Some tests need the ability to add users with the same case insensitive
-    // username or email, hence the _skipCaseInsensitiveChecksForTest check
+  // // Check if there is no other user with a username or email only differing
+  // // in case.
+  // var performCaseInsensitiveCheck = function () {
+  //   // Some tests need the ability to add users with the same case insensitive
+  //   // username or email, hence the _skipCaseInsensitiveChecksForTest check
 
-    if (username &&
-      !_.has(Accounts._skipCaseInsensitiveChecksForTest, username) &&
-      Meteor.users.find(selectorForFastCaseInsensitiveLookup(
-        "username", username)).count() > 1) {
-          throw new Meteor.Error(403, "Username already exists.");
-    }
+  //   if (username &&
+  //     !_.has(Accounts._skipCaseInsensitiveChecksForTest, username) &&
+  //     Meteor.users.find(selectorForFastCaseInsensitiveLookup(
+  //       "username", username)).count() > 1) {
+  //         throw new Meteor.Error(403, "Username already exists.");
+  //   }
 
-    if (email &&
-      !_.has(Accounts._skipCaseInsensitiveChecksForTest, email) &&
-      Meteor.users.find(selectorForFastCaseInsensitiveLookup(
-        "emails.address", email)).count() > 1) {
-        throw new Meteor.Error(403, "Email already exists.");
-    }
-  }
+  //   if (email &&
+  //     !_.has(Accounts._skipCaseInsensitiveChecksForTest, email) &&
+  //     Meteor.users.find(selectorForFastCaseInsensitiveLookup(
+  //       "emails.address", email)).count() > 1) {
+  //       throw new Meteor.Error(403, "Email already exists.");
+  //   }
+  // }
 
-  // Perform a case insensitive check before insert
-  performCaseInsensitiveCheck();
+  // // Perform a case insensitive check before insert
+  // performCaseInsensitiveCheck();
+  console.log("Insert user doc", user);
   var userId = Accounts.insertUserDoc(options, user);
-  // Perform another check after insert, in case a matching user has been
-  // inserted in the meantime
-  try {
-    performCaseInsensitiveCheck();
-  } catch (ex) {
-    // Remove inserted user if the check fails
-    Meteor.users.remove(userId);
-    throw ex;
-  }
   return userId;
 };
 
@@ -853,11 +824,11 @@ Meteor.methods({createUser: function (options) {
       if (! userId)
         throw new Error("createUser failed to insert new user");
 
-      // If `Accounts._options.sendVerificationEmail` is set, register
-      // a token to verify the user's primary email, and send it to
-      // that address.
-      if (options.email && Accounts._options.sendVerificationEmail)
-        Accounts.sendVerificationEmail(userId, options.email);
+      // // If `Accounts._options.sendVerificationEmail` is set, register
+      // // a token to verify the user's primary email, and send it to
+      // // that address.
+      // if (options.email && Accounts._options.sendVerificationEmail)
+      //   Accounts.sendVerificationEmail(userId, options.email);
 
       // client gets logged in as the new user afterwards.
       return {userId: userId};
@@ -891,7 +862,7 @@ Accounts.createUser = function (options, callback) {
 ///
 /// PASSWORD-SPECIFIC INDEXES ON USERS
 ///
-Meteor.users._ensureIndex('services.email.verificationTokens.token',
-                          {unique: 1, sparse: 1});
-Meteor.users._ensureIndex('services.password.reset.token',
-                          {unique: 1, sparse: 1});
+// Meteor.users._ensureIndex('services.email.verificationTokens.token',
+//                           {unique: 1, sparse: 1});
+// Meteor.users._ensureIndex('services.password.reset.token',
+//                           {unique: 1, sparse: 1});
