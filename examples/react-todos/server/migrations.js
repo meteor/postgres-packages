@@ -10,7 +10,9 @@ Migrations.add({
 
       // It's null if the list is public
       table.integer("user_id").nullable();
-      table.string("name").defaultTo(PG.knex.raw("'List '||nextval('lists_id_seq')")).notNullable();
+
+      // The name will be the same as the ID
+      table.string("name").defaultTo(PG.knex.raw("'List '||currval('lists_id_seq')")).notNullable();
     }));
 
     PG.await(PG.knex.schema.createTable("todos", (table) => {
