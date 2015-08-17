@@ -15,8 +15,11 @@ Package.onUse(function(api) {
   api.addFiles('env-migrations.jsx', "server");
   api.use([
     'percolate:migrations@0.7.5',
-    'jsx@0.1.5'
+    'jsx@0.1.5',
+    'underscore'
   ], "server");
+
+  api.export("Migrations");
 });
 
 Package.onTest(function(api) {

@@ -65,7 +65,11 @@ TodoListHeader = React.createClass({
 
     Meteor.call("/lists/togglePrivate", this.props.list._id, (err, res) => {
       if (err) {
-        alert(errorMessages[err.error]);
+        if (_.has(errorMessages, err.error)) {
+          alert(errorMessages[err.error]);
+        } else {
+          console.log(err);
+        }
       }
     });
   },

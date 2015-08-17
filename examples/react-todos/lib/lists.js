@@ -32,6 +32,7 @@ Meteor.methods({
   '/lists/togglePrivate': function (listId) {
     var list = Lists.findOne(listId);
 
+    console.log("inside method!");
     if (! Meteor.user()) {
       throw new Meteor.Error("not-logged-in");
     }

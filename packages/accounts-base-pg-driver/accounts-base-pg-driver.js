@@ -257,9 +257,6 @@ AccountsDBClientPG.migrations.up = function () {
     table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
   }));
 
-  // XXX POSTGRES
-  PG.await(PG.knex.raw("CREATE SEQUENCE users_services_id_seq"));
-
   PG.await(PG.knex.schema.createTable("users_services", (table) => {
     table.increments(); // integer id
 
@@ -297,3 +294,12 @@ AccountsDBClientPG.migrations.down = function () {
   PG.await(PG.knex.schema.dropTable("users_services"));
   PG.await(PG.knex.schema.dropTable("users_emails"));
 };
+
+Migrations.add({
+  version: 1,
+  name: 'Create Accounts database',
+  up: PG.wrapWithTransaction(AccountsDBClientPG.migrations.up),
+  down: PG.wrapWithTransaction(AccountsDBClientPG.migrations.down)
+});
+
+Migrations.runIfEnvSet();

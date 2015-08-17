@@ -17,8 +17,9 @@ Package.onUse(function(api) {
     'simple:pg',
     'ecmascript',
     'check',
-    'underscore'
-  ]);
+    'underscore',
+    'env-migrations'
+  ], 'server');
 
   api.export("AccountsDBClientPG");
 });

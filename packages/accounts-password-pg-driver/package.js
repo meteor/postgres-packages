@@ -18,5 +18,5 @@ Package.onUse(function(api) {
   ], "server");
 
   api.versionsFrom('1.1.0.3');
-  api.addFiles('accounts-password-pg-driver.js');
+  api.addFiles('accounts-password-pg-driver.js', "server");
 });

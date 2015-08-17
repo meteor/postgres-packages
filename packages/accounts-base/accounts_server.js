@@ -54,6 +54,7 @@ AccountsServer = function AccountsServer(server) {
   ];
 
   this.dbClient = new AccountsDBClientPG();
+  this.migrations = AccountsDBClientPG.migrations;
 
   this._deleteSavedTokensForAllUsersOnStartup();
 

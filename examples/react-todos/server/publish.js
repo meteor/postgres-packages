@@ -4,7 +4,7 @@ Meteor.publish('publicLists', function() {
 
 Meteor.publish('privateLists', function() {
   if (this.userId) {
-    return Lists.find({userId: this.userId});
+    return Lists.find({userId: parseInt(this.userId, 10)});
   } else {
     this.ready();
   }
