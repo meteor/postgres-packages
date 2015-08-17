@@ -9,6 +9,7 @@ var Promise = require("bluebird");
 var callbackQueueStack = [];
 
 Promise.setScheduler(function(callback) {
+  console.log('here');
   if (callbackQueueStack.length > 0) {
     callbackQueueStack[callbackQueueStack.length - 1].push(callback);
   } else if (typeof process === "object" &&

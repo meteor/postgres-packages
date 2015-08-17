@@ -39,9 +39,23 @@ function Builder() {
   this._joinFlag  = 'inner';
   this._boolFlag  = 'and';
   this._notFlag   = false;
+
+  this._cbs = {};
 }
 
 _.extend(Builder.prototype, {
+  // XXX sync event emitter simulation
+  on: function (channel, cb) {
+    const cbs = this._cbs;
+    cbs[channel] = cbs[channel] || [];
+    cbs[channel].push(cb);
+    return this;
+  },
+  emit: function (channel, payload) {
+    (this._cbs[channel] || []).forEach(f => f(payload));
+    return this;
+  },
+
   toMongoQuery: function (method) {
     return this.queryCompiler(this).toMongoQuery(method || this._method);
   },

@@ -66,5 +66,7 @@ if (Meteor.isServer) {
   }
   PG.await = await;
 } else {
+  // XXX will only work with the methods of Bookshelf as they use the
+  // version of BlueBird that we supplied over a transform with exposify.
   PG.await = window.__Sync_BlueBird.await;
 }
