@@ -24,6 +24,10 @@ Package.onUse(function(api) {
     'simple:bookshelf'
   ]);
 
+  api.use([
+    'dburles:mongo-collection-instances'
+  ], 'client');
+
   api.addFiles('pre.js');
 
   api.addFiles([

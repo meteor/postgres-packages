@@ -494,48 +494,42 @@ _.extend(QueryCompiler.prototype, {
   // Compiles an "insert" query, allowing for multiple
   // inserts using a single query statement.
   insert: function() {
-    var insertValues = this.single.insert || [];
-    var sql = 'insert into ' + this.tableName + ' ';
-
-    if (Array.isArray(insertValues)) {
-      if (insertValues.length === 0) {
-        return '';
-      }
-    } else if (typeof insertValues === 'object' && _.isEmpty(insertValues)) {
-      return sql + this._emptyInsertValue;
+    const table = this.single.table;
+    const data = this.single.insert;
+    if (Array.isArray(data)) {
+      throw new Error(`Inserting multiple values is not currently supporting by the client-side knex-minimongo`);
     }
 
-    var insertData = this._prepInsert(insertValues);
-    if (typeof insertData === 'string') {
-      sql += insertData;
-    } else  {
-      if (insertData.columns.length) {
-        sql += '(' + this.formatter.columnize(insertData.columns) ;
-        sql += ') values (';
-        var i = -1;
-        while (++i < insertData.values.length) {
-          if (i !== 0) sql += '), (';
-          sql += this.formatter.parameterize(insertData.values[i]);
-        }
-        sql += ')';
-      } else if (insertValues.length === 1 && insertValues[0]) {
-        sql += this._emptyInsertValue;
-      } else {
-        sql = '';
-      }
-    }
-    return sql;
+    return {
+      collection: table,
+      method: 'insert',
+      modifier: data
+    };
   },
 
   // Compiles the "update" query.
   update: function() {
-    // Make sure tableName is processed by the formatter first.
-    var tableName  = this.tableName;
-    var updateData = this._prepUpdate(this.single.update);
-    var wheres     = this.where();
-    return 'update ' + tableName +
-      ' set ' + updateData.join(', ') +
-      (wheres ? ' ' + wheres : '');
+    const table = this.single.table;
+    const modifier = this.single.update;
+    const selector = this.where(this);
+
+    return {
+      collection: table,
+      method: 'update',
+      selector: selector,
+      modifier: modifier
+    };
+  },
+
+  del: function () {
+    const table = this.single.table;
+    const selector = this.where(this);
+
+    return {
+      collection: table,
+      method: 'remove',
+      selector: selector
+    };
   },
 
   // compiles columns to projection
@@ -562,24 +556,9 @@ _.extend(QueryCompiler.prototype, {
     return {skip: this.single.offset};
   },
 
-  // Compiles a `delete` query.
-  del: function() {
-    // Make sure tableName is processed by the formatter first.
-    var tableName  = this.tableName;
-    var wheres = this.where();
-    return 'delete from ' + tableName +
-      (wheres ? ' ' + wheres : '');
-  },
-
   // Compile the "counter".
   counter: function() {
-    var counter = this.single.counter;
-    var toUpdate = {};
-    toUpdate[counter.column] = this.client.raw(this.formatter.wrap(counter.column) +
-      ' ' + (counter.symbol || '+') +
-      ' ' + counter.amount);
-    this.single.update = toUpdate;
-    return this.update();
+    throw new Error();
   },
 
   order: function () {
@@ -731,55 +710,32 @@ _.extend(QueryCompiler.prototype, {
   },
 
   whereIn: function(statement) {
-    if (Array.isArray(statement.column)) return this.multiWhereIn(statement);
-    return this.formatter.wrap(statement.column) + ' ' + this._not(statement, 'in ') +
-      this.wrap(this.formatter.parameterize(statement.value));
+    throw new Error();
   },
 
   multiWhereIn: function(statement) {
-    var i = -1, sql = '(' + this.formatter.columnize(statement.column) + ') ';
-    sql += this._not(statement, 'in ') + '((';
-    while (++i < statement.value.length) {
-      if (i !== 0) sql += '),(';
-      sql += this.formatter.parameterize(statement.value[i]);
-    }
-    return sql + '))';
+    throw new Error();
   },
 
   whereNull: function(statement) {
-    return this.formatter.wrap(statement.column) + ' is ' + this._not(statement, 'null');
-  },
-
-  // Compiles a basic "where" clause.
-  whereBasic: function(statement) {
-    return this._not(statement, '') +
-      this.formatter.wrap(statement.column) + ' ' +
-      this.formatter.operator(statement.operator) + ' ' +
-      this.formatter.parameter(statement.value);
+    throw new Error();
   },
 
   whereExists: function(statement) {
-    return this._not(statement, 'exists') + ' (' + this.formatter.rawOrFn(statement.value) + ')';
+    throw new Error();
   },
 
   whereWrapped: function(statement) {
-    var val = this.formatter.rawOrFn(statement.value, 'where');
-    return val && this._not(statement, '') + '(' + val.slice(6) + ')' || '';
+    throw new Error();
   },
 
   whereBetween: function(statement) {
-    return this.formatter.wrap(statement.column) + ' ' + this._not(statement, 'between') + ' ' +
-      _.map(statement.value, this.formatter.parameter, this.formatter).join(' and ');
-  },
-  wrap: function(str) {
-    if (str.charAt(0) !== '(') return '(' + str + ')';
-    return str;
+    throw new Error();
   },
 
   // Determines whether to add a "not" prefix to the where clause.
   _not: function(statement, str) {
-    if (statement.not) return 'not ' + str;
-    return str;
+    throw new Error();
   }
 });
 
