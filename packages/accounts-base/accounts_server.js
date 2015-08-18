@@ -681,11 +681,6 @@ Ap._initServerPublications = function () {
 
     var userAdded = false;
 
-    console.log("query:", PG.knex
-        .select("*")
-        .from("users")
-        .where("id", userId)
-        .toString());
     const obUser = new PG.Query(
       PG.knex
         .select("*")
@@ -723,17 +718,14 @@ Ap._initServerPublications = function () {
       });
 
     function userChanged(newDoc) {
-      console.log("what")
       if (userAdded) {
         // user changed
         var user = accounts.dbClient.getUserById(userId);
         subscription.changed("users", subscription.userId, user);
-        console.log("CHANGED USER ON THE SERVER", user);
       } else {
         userAdded = true;
         var user = accounts.dbClient.getUserById(userId);
         subscription.added("users", subscription.userId, user);
-        console.log("ADDED USER ON THE SERVER", user);
       }
     }
 

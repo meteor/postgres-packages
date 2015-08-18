@@ -85,7 +85,6 @@ var checkPassword = Accounts._checkPassword;
 // @returns A user if found, else null
 var findUserFromQuery = function (query) {
   var user = null;
-  console.log(Accounts.dbClient)
   if (query.id) {
     user = Meteor.users.findOne({ _id: query.id });
   } else if (query.username) {
@@ -796,7 +795,6 @@ var createUser = function (options) {
 
   // // Perform a case insensitive check before insert
   // performCaseInsensitiveCheck();
-  console.log("Insert user doc", user);
   var userId = Accounts.insertUserDoc(options, user);
   return userId;
 };

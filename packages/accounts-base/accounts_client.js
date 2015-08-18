@@ -189,7 +189,6 @@ Ap.callLoginMethod = function (options) {
                 // Possibly a weird callback to call, but better than nothing if
                 // there is a reconnect between "login result received" and "data
                 // ready".
-                console.log("fired login callbacks!");
                 loginCallbacks(error);
               }, 300);
             }});
@@ -233,7 +232,6 @@ Ap.callLoginMethod = function (options) {
       // Possibly a weird callback to call, but better than nothing if
       // there is a reconnect between "login result received" and "data
       // ready".
-      console.log("fired login callbacks!");
       loginCallbacks(error);
     }, 300);
   };
