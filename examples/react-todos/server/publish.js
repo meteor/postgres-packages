@@ -1,22 +1,10 @@
 Meteor.publish('publicLists', function() {
-  return new PG.Query(
-    PG.knex
-      .select("*")
-      .from("lists")
-      .where("user_id", null)
-      .toString(),
-    'lists');
+  return getListWhere({user_id: null});
 });
 
 Meteor.publish('privateLists', function() {
   if (this.userId) {
-    return new PG.Query(
-      PG.knex
-        .select("*")
-        .from("lists")
-        .where("user_id", parseInt(this.userId, 10))
-        .toString(),
-      'lists');
+    return getListWhere({user_id: parseInt(this.userId, 10)});
   } else {
     this.ready();
   }
@@ -33,3 +21,18 @@ Meteor.publish('todos', function(listId) {
       .toString(),
     'todos');
 });
+
+function getListWhere(where) {
+  return new PG.Query(
+    PG.knex
+      .select("lists.*", PG.knex.raw("count(todos.id)::integer as incomplete_count"))
+      .where(where)
+      .leftJoin("todos", function () {
+        this.on("todos.list_id", "lists.id")
+          .andOn("todos.checked", "=", PG.knex.raw("FALSE"));
+      })
+      .groupBy("lists.id")
+      .from("lists")
+      .toString(),
+    'lists');
+}

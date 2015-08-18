@@ -20,9 +20,9 @@ TodoLists = React.createClass({
           to="todoList"
           params={{ listId: list._id }}>
             { list.name }
-            { list.incompleteCount ?
+            { list.incomplete_count ?
               <span className="count-list">
-                { list.incompleteCount }
+                { list.incomplete_count }
               </span> : "" }
         </Link>
       );
@@ -30,7 +30,7 @@ TodoLists = React.createClass({
 
     return (
       <div>
-        { allTodoLists }  
+        { allTodoLists }
       </div>
     );
   }

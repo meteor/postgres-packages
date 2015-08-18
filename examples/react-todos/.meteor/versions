@@ -29,7 +29,6 @@ ecmascript@0.1.3-rc.0
 ecmascript-collections@0.1.5-rc.0
 ejson@1.0.7-rc.0
 email@1.0.7-rc.0
-env-migrations@0.0.1
 fastclick@1.0.7-rc.0
 geojson-utils@1.0.4-rc.0
 hot-code-push@1.0.0-rc.0
@@ -59,7 +58,6 @@ npm-container@1.0.0
 npm-mongo@1.4.39-rc.0_1
 observe-sequence@1.0.7-rc.0
 ordered-dict@1.0.4-rc.0
-percolate:migrations@0.7.6
 promise@0.4.3-rc.0_1
 random@1.0.4-rc.0
 rate-limit@1.0.0-rc.0

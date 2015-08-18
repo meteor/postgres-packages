@@ -247,59 +247,59 @@ AccountsDBClientPG = class AccountsDBClientPG {
   }
 }
 
-AccountsDBClientPG.migrations = {};
+// AccountsDBClientPG.migrations = {};
 
-AccountsDBClientPG.migrations.up = function () {
-  PG.await(PG.knex.schema.createTable("users", (table) => {
-    table.increments(); // integer id
+// AccountsDBClientPG.migrations.up = function () {
+//   PG.await(PG.knex.schema.createTable("users", (table) => {
+//     table.increments(); // integer id
 
-    // XXX POSTGRES
-    table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
-  }));
+//     // XXX POSTGRES
+//     table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
+//   }));
 
-  PG.await(PG.knex.schema.createTable("users_services", (table) => {
-    table.increments(); // integer id
+//   PG.await(PG.knex.schema.createTable("users_services", (table) => {
+//     table.increments(); // integer id
 
-    // XXX POSTGRES
-    table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
+//     // XXX POSTGRES
+//     table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
 
-    table.integer("user_id").notNullable();
+//     table.integer("user_id").notNullable();
 
-    table.string("service_name").notNullable();
-    table.string("key").notNullable();
-    table.string("value").notNullable();
+//     table.string("service_name").notNullable();
+//     table.string("key").notNullable();
+//     table.string("value").notNullable();
 
-    // We are going to put a random ID here if this value is not meant to be
-    // unique across users
-    table.integer("id_if_not_unique").defaultTo(PG.knex.raw("nextval('users_services_id_seq')"));
-  }));
+//     // We are going to put a random ID here if this value is not meant to be
+//     // unique across users
+//     table.integer("id_if_not_unique").defaultTo(PG.knex.raw("nextval('users_services_id_seq')"));
+//   }));
 
-  PG.await(PG.knex.schema.createTable("users_emails", (table) => {
-    table.increments(); // integer id
+//   PG.await(PG.knex.schema.createTable("users_emails", (table) => {
+//     table.increments(); // integer id
 
-    // XXX POSTGRES
-    table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
+//     // XXX POSTGRES
+//     table.timestamp("created_at").defaultTo(PG.knex.raw('now()')).notNullable();
 
-    table.integer("user_id").notNullable();
-    table.string("address").unique().notNullable();
-    table.boolean("verified").defaultTo(false).notNullable();
-  }));
+//     table.integer("user_id").notNullable();
+//     table.string("address").unique().notNullable();
+//     table.boolean("verified").defaultTo(false).notNullable();
+//   }));
 
-  // XXX POSTGRES
-  PG.await(PG.knex.raw("ALTER TABLE users_services ADD CONSTRAINT skvi UNIQUE (service_name, key, value, id_if_not_unique);"));
-};
+//   // XXX POSTGRES
+//   PG.await(PG.knex.raw("ALTER TABLE users_services ADD CONSTRAINT skvi UNIQUE (service_name, key, value, id_if_not_unique);"));
+// };
 
-AccountsDBClientPG.migrations.down = function () {
-  PG.await(PG.knex.schema.dropTable("users"));
-  PG.await(PG.knex.schema.dropTable("users_services"));
-  PG.await(PG.knex.schema.dropTable("users_emails"));
-};
+// AccountsDBClientPG.migrations.down = function () {
+//   PG.await(PG.knex.schema.dropTable("users"));
+//   PG.await(PG.knex.schema.dropTable("users_services"));
+//   PG.await(PG.knex.schema.dropTable("users_emails"));
+// };
 
-Migrations.add({
-  version: 1,
-  name: 'Create Accounts database',
-  up: PG.wrapWithTransaction(AccountsDBClientPG.migrations.up),
-  down: PG.wrapWithTransaction(AccountsDBClientPG.migrations.down)
-});
+// Migrations.add({
+//   version: 1,
+//   name: 'Create Accounts database',
+//   up: PG.wrapWithTransaction(AccountsDBClientPG.migrations.up),
+//   down: PG.wrapWithTransaction(AccountsDBClientPG.migrations.down)
+// });
 
-//Migrations.runIfEnvSet("ACCOUNTS_MIGRATIONS");
+// //Migrations.runIfEnvSet("ACCOUNTS_MIGRATIONS");

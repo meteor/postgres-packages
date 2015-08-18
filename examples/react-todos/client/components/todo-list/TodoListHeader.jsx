@@ -133,7 +133,7 @@ TodoListHeader = React.createClass({
           <MenuOpenToggle />
           <h1 className="title-page" onClick={ this.startEditingTitle }>
             <span className="title-wrapper">{ list.name }</span>
-            <span className="count-list">{ list.incompleteCount }</span>
+            <span className="count-list">{ list.incomplete_count }</span>
           </h1>
           <div className="nav-group right">
             <div className="nav-item options-mobile">
