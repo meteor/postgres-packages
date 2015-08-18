@@ -13,26 +13,20 @@ Meteor.publish('privateLists', function() {
 Meteor.publish('todos', function(listId) {
   check(listId, Match.Integer);
 
-  return new PG.Query(
-    PG.knex
-      .select("*")
-      .from("todos")
-      .where("list_id", listId)
-      .toString(),
-    'todos');
+  return PG.knex
+    .select("*")
+    .from("todos")
+    .where("list_id", listId);
 });
 
 function getListWhere(where) {
-  return new PG.Query(
-    PG.knex
-      .select("lists.*", PG.knex.raw("count(todos.id)::integer as incomplete_count"))
-      .where(where)
-      .leftJoin("todos", function () {
-        this.on("todos.list_id", "lists.id")
-          .andOn("todos.checked", "=", PG.knex.raw("FALSE"));
-      })
-      .groupBy("lists.id")
-      .from("lists")
-      .toString(),
-    'lists');
+  return PG.knex
+    .select("lists.*", PG.knex.raw("count(todos.id)::integer as incomplete_count"))
+    .where(where)
+    .leftJoin("todos", function () {
+      this.on("todos.list_id", "lists.id")
+        .andOn("todos.checked", "=", PG.knex.raw("FALSE"));
+    })
+    .groupBy("lists.id")
+    .from("lists");
 }

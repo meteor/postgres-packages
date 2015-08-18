@@ -24,6 +24,7 @@ QBProto._publishCursor = function (sub) {
 // a way for the Knex queries to actually run w/o promises
 QBProto.run = function () {
   if (Meteor.isServer) {
+    console.log("running in promise");
     return PG.await(this);
   }
 
@@ -98,7 +99,9 @@ PG.Table = class Table {
       ...relations
     });
 
-    this.knex = PG.knex(tableName);
+    this.knex = function () {
+      return PG.knex(tableName)
+    };
 
     if (Meteor.isClient) {
       // register a minimongo store for this table
