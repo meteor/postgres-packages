@@ -613,7 +613,7 @@ _.extend(QueryCompiler.prototype, {
     logicalBool = logicalBool || 'and';
     if (logicalBool === 'or') {
       selector = {
-        $or: parts
+        $or: parts.map(convertEq)
       };
     } else if (logicalBool === 'and') {
       // { field: { $gt: [2, 3] , ...}, ... }
@@ -626,11 +626,11 @@ _.extend(QueryCompiler.prototype, {
         const subselKeys = Object.keys(subsel);
         subselKeys.forEach((key) => {
           if (key === '$and') {
-            $and.push(...subsel[key]);
+            $and.push(...subsel[key].map(convertEq));
             return;
           }
           if (key === '$or') {
-            $ors.push(subsel[key]);
+            $ors.push(subsel[key].map(convertEq));
             return;
           }
 
@@ -653,16 +653,39 @@ _.extend(QueryCompiler.prototype, {
       keys.forEach((key) => {
         const table = opsTable[key];
         const subsel = (selector[key] = {});
+        const all$ands = Object.keys(table).some((op) => {
+          const pieces = table[op];
+          if (op === '$eq') {
+            // if there are other selectors on this key in addition to
+            // this $eq or there are other $eqs
+            return (Object.keys(table).length > 1 || pieces.length > 1);
+          }
+          return pieces.length > 1;
+        });
+
         Object.keys(table).forEach((op) => {
           const pieces = table[op];
-          if (pieces.length > 1) {
+
+          // $eq has a special treatment as Minimongo doesn't support
+          // $eq yet and we need to use a simple matching: {x: 1}
+          // instead of {x: $eq}
+          if (op === '$eq') {
+            if (all$ands) {
+              $and.push(...pieces.map(piece => ({[key]: piece})));
+            } else {
+              selector[key] = pieces[0];
+            }
+            return;
+          }
+
+          if (all$ands) {
             $and.push(...pieces.map(piece => ({[key]: {[op]: piece}})));
           } else {
             subsel[op] = pieces[0];
           }
         });
 
-        if (_.isEmpty(subsel)) {
+        if (_.isObject(selector[key]) && _.isEmpty(selector[key])) {
           delete selector[key];
         }
       });
@@ -691,6 +714,19 @@ _.extend(QueryCompiler.prototype, {
 
     return {selector};
 
+    function convertEq (sel) {
+      const newSel = {};
+      Object.keys(sel).forEach(key => {
+        const subsel = sel[key];
+        if (Object.keys(subsel).length === 1 && _.has(subsel, '$eq'))
+          newSel[key] = subsel.$eq;
+        else
+          newSel[key] = subsel;
+      });
+
+      return newSel;
+    }
+
     function compileSubselector(operator, value) {
       const table = {
         '=': '$eq',
@@ -704,10 +740,6 @@ _.extend(QueryCompiler.prototype, {
       const op = table[operator];
 
       if (! op) throw new Error(`Unsupported comparison operator '${operator}'`);
-
-      if (op === "$eq") {
-        return value;
-      }
 
       return { [op]: value };
     }

@@ -39,7 +39,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
       method: 'find',
       collection: 'table',
       selector: {
-        field_a: {$eq: 'some value'}
+        field_a: 'some value'
       },
       projection: {}
     },
@@ -97,8 +97,8 @@ Tinytest.add('knex - sql to mongo', (test) => {
     }),
     {
       selector: {
-        x: { $eq: 1 },
-        y: { $eq: 2 }
+        x: 1,
+        y: 2
       }
     },
     'where with object'
@@ -108,11 +108,7 @@ Tinytest.add('knex - sql to mongo', (test) => {
     knex('table').where('x', 1).orWhere('x', 3),
     {
       selector: {
-        $or: [{
-          x: { $eq: 1 }
-        }, {
-          x: { $eq: 3 }
-        }]
+        $or: [{x: 1}, {x: 3}]
       }
     }
   );
@@ -143,8 +139,8 @@ Tinytest.add('knex - sql to mongo', (test) => {
     {
       selector: {
         $or: [
-          {id: {$eq: 1}, x: {$gt: 5}},
-          {id: {$eq: 2}, x: {$lt: 0}}
+          {id: 1, x: {$gt: 5}},
+          {id: 2, x: {$lt: 0}}
         ]
       }
     },
@@ -160,12 +156,38 @@ Tinytest.add('knex - sql to mongo', (test) => {
     {
       selector: {
         $and: [
-          {$or: [{id: {$eq: 1}}, {x: {$gt: 5}}]},
-          {$or: [{id: {$eq: 2}}, {x: {$lt: 0}}]}
+          {$or: [{id: 1}, {x: {$gt: 5}}]},
+          {$or: [{id: 2}, {x: {$lt: 0}}]}
         ]
       }
     },
     'nested and/or where'
+  );
+
+  t(
+    knex('t').where('id', 1).where('id', 2),
+    {
+      selector: {
+        $and: [
+          {id: 1},
+          {id: 2}
+        ]
+      }
+    },
+    'matching against multiple things'
+  );
+
+  t(
+    knex('t').where('id', 1).where('id', '<', 2),
+    {
+      selector: {
+        $and: [
+          {id: 1},
+          {id: {$lt: 2}}
+        ]
+      }
+    },
+    'matching against multiple things'
   );
 
   t(
