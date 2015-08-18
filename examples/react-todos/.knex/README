@@ -1,3 +1,9 @@
+Create database (if you already have Postgres installed and running):
+
+```bash
+createdb todos
+```
+
 Run the knex CLI inside here.
 
 ```bash
