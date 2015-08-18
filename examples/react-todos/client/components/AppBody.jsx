@@ -64,7 +64,7 @@ AppBody = React.createClass({
 
     return {
       subsReady: subsReady,
-      lists: Lists.find({}, { sort: {createdAt: -1} }).fetch(),
+      lists: Lists.find({}, { sort: {created_at: -1} }).fetch(),
       currentUser: Meteor.user(),
       disconnected: ShowConnectionIssues.get() && (! Meteor.status().connected)
     };
@@ -107,8 +107,8 @@ AppBody = React.createClass({
     return (
       <div id="container" className={ appBodyContainerClass }>
 
-        <LeftPanel 
-          currentUser={this.data.currentUser} 
+        <LeftPanel
+          currentUser={this.data.currentUser}
           onAddList={this.addList}
           lists={this.data.lists}
           activeListId={this.getListId()} />

@@ -139,7 +139,7 @@ TodoListHeader = React.createClass({
             <div className="nav-item options-mobile">
               <select className="list-edit">
                 <option disabled>Select an action</option>
-                { list.userId ?
+                { list.user_id ?
                   <option value="public">Make Public</option> :
                   <option value="private">Make Private</option> }
                 <option value="delete">Delete</option>
@@ -148,7 +148,7 @@ TodoListHeader = React.createClass({
             </div>
             <div className="options-web">
               <a className="nav-item" onClick={ this.onToggleListPrivacy }>
-                { list.userId ?
+                { list.user_id ?
                     <span className="icon-lock" title="Make list public" /> :
                     <span className="icon-unlock" title="Make list private" /> }
               </a>

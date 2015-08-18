@@ -224,8 +224,6 @@ AccountsDBClientPG = class AccountsDBClientPG {
         record.id_if_not_unique = 0;
       }
 
-      console.log(record);
-
       return record;
     });
 

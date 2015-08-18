@@ -12,13 +12,15 @@ Meteor.methods({
     PG.await(PG.knex("lists").update({name: newName}).where({id: listId}));
   },
   '/lists/togglePrivate': function (listId) {
-    var list = PG.await(PG.knex("lists").where({id: listId}));
+    var list = PG.await(PG.knex("lists").where({id: listId}))[0];
 
     if (! Meteor.userId()) {
       throw new Meteor.Error("not-logged-in");
     }
 
+    console.log(list);
     if (list.user_id) {
+      console.log("setting user id to null");
       PG.await(PG.knex("lists").where({id: listId}).update({user_id: null}));
     } else {
       // ensure the last public list cannot be made private
@@ -30,7 +32,7 @@ Meteor.methods({
     }
   },
   '/lists/delete': function (listId) {
-    var list = PG.await(PG.knex("lists").where({id: listId}));
+    var list = PG.await(PG.knex("lists").where({id: listId}))[0];
 
     // ensure the last public list cannot be deleted.
     if (! list.user_id && PG.await(PG.knex("lists").count("*").whereNull("user_id"))[0].count == 1) {

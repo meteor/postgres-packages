@@ -675,11 +675,14 @@ Ap._initServerPublications = function () {
       return null;
     }
 
+    console.log("running publication for user data", this.userId);
+
     const userId = parseInt(this.userId, 10);
 
     const subscription = this;
 
-    var userAdded = false;
+    var user = accounts.dbClient.getUserById(userId);
+    subscription.added("users", subscription.userId, user);
 
     const obUser = new PG.Query(
       PG.knex
@@ -718,22 +721,18 @@ Ap._initServerPublications = function () {
       });
 
     function userChanged(newDoc) {
-      if (userAdded) {
-        // user changed
-        var user = accounts.dbClient.getUserById(userId);
-        subscription.changed("users", subscription.userId, user);
-      } else {
-        userAdded = true;
-        var user = accounts.dbClient.getUserById(userId);
-        subscription.added("users", subscription.userId, user);
-      }
+      var user = accounts.dbClient.getUserById(userId);
+      subscription.added("users", subscription.userId, user);
     }
+
+
 
     function userRemoved() {
       throw new Error("WTF")
     }
 
     subscription.onStop(function () {
+      console.log("subscription stopped");
       obUser.stop();
       obUserServices.stop();
       obUserEmails.stop();
