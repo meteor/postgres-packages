@@ -33,6 +33,7 @@ PG.Query.prototype.observe = function (cbs) {
     diff.added.forEach(function (d) {
       cbs.added && cbs.added(transform(d));
     });
+
     diff.changed.forEach(function (ds) {
       cbs.changed && cbs.changed(transform(ds[0]), transform(ds[1]));
     });
@@ -50,6 +51,8 @@ PG.Query.prototype.observe = function (cbs) {
       if (index > -1) {
         handles.splice(index, 1);
       }
+
+      select.stop();
     }
   };
 };

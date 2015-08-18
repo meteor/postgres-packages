@@ -13,14 +13,14 @@ Meteor.publish('privateLists', function() {
 Meteor.publish('todos', function(listId) {
   check(listId, Match.Integer);
 
-  return PG.knex
+  return Todos.knex()
     .select("*")
     .from("todos")
     .where("list_id", listId);
 });
 
 function getListWhere(where) {
-  return PG.knex
+  return Lists.knex()
     .select("lists.*", PG.knex.raw("count(todos.id)::integer as incomplete_count"))
     .where(where)
     .leftJoin("todos", function () {

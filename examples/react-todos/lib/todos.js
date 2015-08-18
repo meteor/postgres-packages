@@ -1,6 +1,6 @@
-// Stuff below here is server-only
 Todos = new PG.Table('todos');
 
+// Stuff below here is server-only
 if (Meteor.isClient) {
   return;
 }

@@ -675,8 +675,6 @@ Ap._initServerPublications = function () {
       return null;
     }
 
-    console.log("running publication for user data", this.userId);
-
     const userId = parseInt(this.userId, 10);
 
     const subscription = this;
@@ -732,7 +730,6 @@ Ap._initServerPublications = function () {
     }
 
     subscription.onStop(function () {
-      console.log("subscription stopped");
       obUser.stop();
       obUserServices.stop();
       obUserEmails.stop();

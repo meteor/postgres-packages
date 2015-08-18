@@ -59,7 +59,7 @@
       }
     },
     "pg-live-select": {
-      "version": "https://github.com/Slava/pg-live-select/tarball/fc443165b070572238a124d100ca7fe6dbb7313e",
+      "version": "https://github.com/Slava/pg-live-select/tarball/c8a4c9eea76b0e2da2b1cbe3417b55a8ab3a56d7",
       "dependencies": {
         "lodash": {
           "version": "3.10.1"
