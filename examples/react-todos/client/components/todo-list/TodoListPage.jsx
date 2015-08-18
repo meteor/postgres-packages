@@ -14,8 +14,8 @@ TodoListPage = React.createClass({
     const tasksSubHandle = Meteor.subscribe("todos", listId);
 
     return {
-      tasks: Todos.find({ list_id: listId }, {sort: {created_at : -1}}).fetch(),
-      list: Lists.findOne({ id: listId }),
+      tasks: Todos.knex.where({ list_id: listId }).orderBy("created_at", "DESC").run(),
+      list: Lists.knex.where({ id: listId }).run()[0],
       tasksLoading: ! tasksSubHandle.ready()
     };
   },

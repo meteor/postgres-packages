@@ -25,7 +25,8 @@ Package.onUse(function(api) {
   ]);
 
   api.use([
-    'dburles:mongo-collection-instances'
+    'dburles:mongo-collection-instances',
+    'mongo'
   ], 'client');
 
   api.addFiles('pre.js');

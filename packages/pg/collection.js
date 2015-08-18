@@ -98,6 +98,8 @@ PG.Table = class Table {
       ...relations
     });
 
+    this.knex = PG.knex(tableName);
+
     if (Meteor.isClient) {
       // register a minimongo store for this table
       this.minimongo = new Mongo.Collection(tableName);

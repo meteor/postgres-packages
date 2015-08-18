@@ -310,7 +310,7 @@ _.extend(Builder.prototype, {
     });
     return this;
   },
-  
+
   // Only allow a single "offset" to be set for the current query.
   offset: function(value) {
     this._single.offset = value;
@@ -323,7 +323,7 @@ _.extend(Builder.prototype, {
     if (isNaN(val)) {
       throw Error('A valid integer must be provided to limit');
     } else {
-      this._single.limit = val;  
+      this._single.limit = val;
     }
     return this;
   },
@@ -387,7 +387,7 @@ _.extend(Builder.prototype, {
     };
     return this;
   },
-  
+
   // Helper to get or set the "boolFlag" value.
   _bool: function(val) {
     if (arguments.length === 1) {
@@ -490,7 +490,7 @@ _.extend(QueryCompiler.prototype, {
       method: 'find'
     }, combined);
   },
-  
+
   // Compiles an "insert" query, allowing for multiple
   // inserts using a single query statement.
   insert: function() {
@@ -568,7 +568,7 @@ _.extend(QueryCompiler.prototype, {
     orders.forEach(({value, direction}) =>
       sort.push([value, (direction || 'asc').toLowerCase()])
     );
-    
+
     return {
       sort
     };
@@ -582,7 +582,7 @@ _.extend(QueryCompiler.prototype, {
     const parts = [];
     let logicalBool = null;
     let selector = null;
- 
+
     wheres.forEach((whereGroup, i) => {
       const {bool, type, column, operator, value} = whereGroup;
 
@@ -704,6 +704,10 @@ _.extend(QueryCompiler.prototype, {
       const op = table[operator];
 
       if (! op) throw new Error(`Unsupported comparison operator '${operator}'`);
+
+      if (op === "$eq") {
+        return value;
+      }
 
       return { [op]: value };
     }

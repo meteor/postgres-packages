@@ -199,13 +199,13 @@ Ap._initConnection = function (options) {
   }
 };
 
-// loginServiceConfiguration and ConfigError are maintained for backwards compatibility
-Meteor.startup(function () {
-  var ServiceConfiguration =
-    Package['service-configuration'].ServiceConfiguration;
-  Ap.loginServiceConfiguration = ServiceConfiguration.configurations;
-  Ap.ConfigError = ServiceConfiguration.ConfigError;
-});
+// // loginServiceConfiguration and ConfigError are maintained for backwards compatibility
+// Meteor.startup(function () {
+//   var ServiceConfiguration =
+//     Package['service-configuration'].ServiceConfiguration;
+//   Ap.loginServiceConfiguration = ServiceConfiguration.configurations;
+//   Ap.ConfigError = ServiceConfiguration.ConfigError;
+// });
 
 // Thrown when the user cancels the login process (eg, closes an oauth
 // popup, declines retina scan, etc)

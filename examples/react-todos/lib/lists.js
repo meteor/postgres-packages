@@ -1,6 +1,6 @@
 if (Meteor.isClient) {
   // Stuff below here is server-only
-  Lists = new Mongo.Collection('lists');
+  Lists = new PG.Table('lists');
   return;
 }
 

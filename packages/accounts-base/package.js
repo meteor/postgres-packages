@@ -20,7 +20,7 @@ Package.onUse(function (api) {
 
   // use unordered to work around a circular dependency
   // (service-configuration needs Accounts.connection)
-  api.use('service-configuration', ['client', 'server'], { unordered: true });
+  // api.use('service-configuration', ['client', 'server'], { unordered: true });
 
   // needed for getting the currently logged-in user
   api.use('ddp', ['client', 'server']);

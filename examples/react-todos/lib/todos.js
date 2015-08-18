@@ -1,6 +1,6 @@
 if (Meteor.isClient) {
   // Stuff below here is server-only
-  Todos = new Mongo.Collection('todos');
+  Todos = new PG.Table('todos');
   return;
 }
 

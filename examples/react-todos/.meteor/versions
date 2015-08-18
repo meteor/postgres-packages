@@ -71,7 +71,6 @@ reactive-var@1.0.6-rc.0
 reload@1.1.4-rc.0
 retry@1.0.4-rc.0
 routepolicy@1.0.6-rc.0
-service-configuration@1.0.5-rc.0
 session@1.1.1-rc.0
 sha@1.0.4-rc.0
 simple:bookshelf@0.0.1
