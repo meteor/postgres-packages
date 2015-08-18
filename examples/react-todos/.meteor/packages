@@ -29,6 +29,5 @@ ejson
 spacebars
 check
 react
-env-migrations
 
 simple:pg
