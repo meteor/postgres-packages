@@ -1,0 +1,5 @@
+site_name: Meteor Postgres
+theme: readthedocs
+pages:
+- index: index.md
+- Migrations: migrations.md
