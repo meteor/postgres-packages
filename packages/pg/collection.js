@@ -92,13 +92,17 @@ PG.Table = class Table {
       return PG.knex(tableName)
     };
 
+    // Should be applied via transform
+    // Not sure how to do this on the server
+    this.modelClass = options.modelClass;
+
     if (Meteor.isClient) {
       const minimongoOptions = {};
-      if (options.modelClass) {
-        minimongoOptions.transform = function transform(doc) {
+      if (this.modelClass) {
+        minimongoOptions.transform = (doc) => {
           // Maybe we can make this more efficient later, now that we know the
           // transform is specific
-          return new options.modelClass(doc);
+          return new this.modelClass(doc);
         };
       }
 
