@@ -30,6 +30,10 @@ PG.Query.prototype.observe = function (cbs) {
   var transform = this.options.transform || function (x) { return x; };
 
   select.on('update', function (diff) {
+    diff.added = diff.added || [];
+    diff.changed = diff.changed || [];
+    diff.removed = diff.removed || [];
+
     diff.added.forEach(function (d) {
       cbs.added && cbs.added(transform(d));
     });

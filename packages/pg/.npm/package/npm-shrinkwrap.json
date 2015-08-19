@@ -59,16 +59,13 @@
       }
     },
     "pg-live-select": {
-      "version": "https://github.com/Slava/pg-live-select/tarball/c8a4c9eea76b0e2da2b1cbe3417b55a8ab3a56d7",
+      "version": "1.0.3",
       "dependencies": {
         "lodash": {
           "version": "3.10.1"
         },
         "murmurhash-js": {
           "version": "1.0.0"
-        },
-        "pg-connection-string": {
-          "version": "0.1.3"
         }
       }
     }
