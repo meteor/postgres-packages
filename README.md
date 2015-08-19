@@ -1,5 +1,6 @@
-# pg-example
-Yeah boys, this night we are going to tease elephants!
+# Postgres Packages
+
+Elephants don't fly, most of the time.
 
 ![Dumbo](/img/dumbo.jpg)
 
