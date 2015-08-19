@@ -1,4 +1,12 @@
-Lists = new PG.Table('lists');
+class List extends PG.Model {
+  todos() {
+    return Todos.knex().where({list_id: this._id});
+  }
+}
+
+Lists = new PG.Table('lists', {
+  modelClass: List
+});
 
 if (Meteor.isClient) {
   // Stuff below here is server-only

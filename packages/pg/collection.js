@@ -87,24 +87,23 @@ bookshelf.Model.forge = function () {
 
 
 PG.Table = class Table {
-  constructor(tableName, relations) {
-    if (Meteor.isClient) {
-      // XXX the client-side code doesn't support the relations
-      relations = {};
-    }
-
-    this.model = bookshelf.Model.extend({
-      tableName: tableName,
-      ...relations
-    });
-
+  constructor(tableName, options = {}) {
     this.knex = function () {
       return PG.knex(tableName)
     };
 
     if (Meteor.isClient) {
+      const minimongoOptions = {};
+      if (options.modelClass) {
+        minimongoOptions.transform = function transform(doc) {
+          // Maybe we can make this more efficient later, now that we know the
+          // transform is specific
+          return new options.modelClass(doc);
+        };
+      }
+
       // register a minimongo store for this table
-      this.minimongo = new Mongo.Collection(tableName);
+      this.minimongo = new Mongo.Collection(tableName, minimongoOptions);
     } else {
       const exists = PG.await(knex.schema.hasTable(tableName));
 
@@ -112,6 +111,12 @@ PG.Table = class Table {
         throw new Error(`Table '${tableName}' doesn't exist. Please create it in a migration.`);
       }
     }
+  }
+}
+
+PG.Model = class Model {
+  constructor(doc) {
+    _.extend(this, doc);
   }
 }
 
