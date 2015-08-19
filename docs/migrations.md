@@ -1,8 +1,60 @@
-# Migrations with Knex
+# Setting up the database and running migrations
+
+With MongoDB, Meteor automatically sets up and runs the database for you, and you don't need any migrations because there is no schema. With Postgres, we haven't yet built functionality to install and run the database for you, and you will definitely need migrations.
+
+## Installing and running PostgreSQL
+
+Currently, we only have directions for Mac OS. Please add more for other systems!
+
+### On Mac
+
+The easiest way to install Postgres on a Mac is with [Homebrew](http://brew.sh/):
+
+```sh
+brew install postgresql
+```
+
+Initialize postgres with a data directory:
+
+```sh
+initdb /usr/local/var/postgres -E utf8
+```
+
+Running the database:
+
+```sh
+postgres -D /usr/local/var/postgres
+```
+
+## Creating and deleting databases
+
+You will want to create a new database for each new app. Do this with the `createdb` command:
+
+```sh
+createdb todos
+```
+
+You can drop the database if you screw something up or want to free disk space:
+
+```sh
+dropdb todos
+```
+
+## Running Postgres console
+
+To connect to your database with a SQL console, run:
+
+```sh
+psql todos
+```
+
+For this command to work, your local Postgres server needs to be running, as described in "Running the database" above.
+
+## Migrations
 
 To run migrations on our database, we will use the [Knex CLI](http://knexjs.org/#Migrations-CLI).
 
-## Setting up
+### Setting up
 
 First, create a `.knex` directory in your repo. Putting a period at the beginning of the directory name will tell Meteor to ignore it, so that we can put custom scripts in here.
 
@@ -27,12 +79,21 @@ Finally, initialize Knex:
 knex init
 ```
 
-XXX set up the `knexfile.js` with your database config - how is this supposed to work??
-XXX create database
+Now, you can either set up `knexfile.js` with your database information, or replace it with a file that just loads the information from an environment variable, like so:
 
-All Knex commands below should be run inside this `.knex` directory.
+```js
+// knexfile.js
+module.exports = {
+  client: 'pg',
+  connection: process.env.POSTGRESQL_URL
+};
+```
 
-## Creating a migration
+This is the same environment variable that Meteor uses to find your database.
+
+All Knex commands below should be run inside the `.knex` directory we just created.
+
+### Creating a migration
 
 To create a migration, first create a timestamped migration file with Knex:
 
@@ -78,7 +139,7 @@ exports.down = function(knex, Promise) {
 };
 ```
 
-## Running migrations
+### Running migrations
 
 Before running any migrations, make sure you have created a Postgres database for your app and specified the correct database name, username, and password in your configuration file.
 
