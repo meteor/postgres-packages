@@ -1,5 +1,6 @@
-site_name: Meteor Postgres
+site_name: Meteor PostgreSQL
 theme: readthedocs
 pages:
-- index: index.md
-- Migrations: migrations.md
+- Introduction: index.md
+- DB setup and migrations: migrations.md
+- Publishing data: publish.md

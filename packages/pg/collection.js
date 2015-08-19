@@ -21,6 +21,26 @@ QBProto._publishCursor = function (sub) {
   return new PG.Query(queryStr, tableName)._publishCursor(sub);
 };
 
+const oldRaw = knex.raw;
+knex.raw = function () {
+  const ret = oldRaw.apply(knex, arguments);
+
+  ret.table = (tableName) => {
+    ret._tableName = tableName;
+    return ret;
+  };
+
+  ret._publishCursor = (sub) => {
+    if (! ret._tableName) {
+      throw new Error("Need to set table name with .table() if publishing a raw query.");
+    }
+
+    return new PG.Query(ret.toString(), ret._tableName)._publishCursor(sub);
+  };
+
+  return ret;
+}
+
 // a way for the Knex queries to actually run w/o promises
 QBProto.run = function () {
   if (Meteor.isServer) {

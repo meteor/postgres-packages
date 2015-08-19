@@ -27,6 +27,9 @@ Finally, initialize Knex:
 knex init
 ```
 
+XXX set up the `knexfile.js` with your database config - how is this supposed to work??
+XXX create database
+
 All Knex commands below should be run inside this `.knex` directory.
 
 ## Creating a migration
@@ -76,6 +79,8 @@ exports.down = function(knex, Promise) {
 ```
 
 ## Running migrations
+
+Before running any migrations, make sure you have created a Postgres database for your app and specified the correct database name, username, and password in your configuration file.
 
 To migrate to the latest version, run:
 
