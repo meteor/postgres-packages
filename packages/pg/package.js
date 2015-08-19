@@ -6,7 +6,7 @@ Package.describe({
 });
 
 Npm.depends({
-  'pg-live-select': 'https://github.com/Slava/pg-live-select/tarball/c8a4c9eea76b0e2da2b1cbe3417b55a8ab3a56d7',
+  'pg-live-select': 'https://github.com/Slava/pg-live-select/tarball/fc443165b070572238a124d100ca7fe6dbb7313e',
   'pg': '4.4.1'
 });
 
