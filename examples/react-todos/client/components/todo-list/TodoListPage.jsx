@@ -14,13 +14,19 @@ TodoListPage = React.createClass({
     const tasksSubHandle = Meteor.subscribe("todos", listId);
 
     const list = Lists.knex().where({ id: listId }).run()[0];
-    console.log(list && list.todos().orderBy("created_at", "DESC").run())
 
-    return {
-      tasks: list && list.todos().orderBy("created_at", "DESC").run(),
-      list: list,
-      tasksLoading: ! tasksSubHandle.ready()
-    };
+    if (tasksSubHandle.ready()) {
+      return {
+        tasks: list.todos().orderBy("created_at", "DESC").run(),
+        list: list,
+        tasksLoading: false
+      };
+    } else {
+      return {
+        list: list,
+        tasksLoading: true,
+      };
+    }
   },
 
   render() {
@@ -37,7 +43,9 @@ TodoListPage = React.createClass({
           list={list}
           showLoadingIndicator={this.data.tasksLoading} />
 
-        <TodoListItems tasks={this.data.tasks} />
+        { this.data.tasksLoading ? "" :
+          <TodoListItems tasks={this.data.tasks} />
+        }
       </div>
     );
   }
