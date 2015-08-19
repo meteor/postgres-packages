@@ -30,7 +30,7 @@ Meteor.publish('todos', function(listId) {
 ### With raw query
 
 Notice that when you don't use the query builder, you need to manually specify
-the name of the table so that Meteor knows what table to put the data in on the
+the name of the table with `publishAs` so that Meteor knows what table to put the data in on the
 client.
 
 Read more here: [Knex raw queries](http://knexjs.org/#Raw-Queries).
@@ -49,7 +49,7 @@ Meteor.publish('todos', function(listId) {
   return PG.knex.raw(
     "SELECT * FROM todos WHERE list_id=?",
     [listId]
-  ).table("todos");
+  ).publishAs("todos");
 });
 ```
 
@@ -105,7 +105,11 @@ left join "todos" on
   "todos"."checked" = FALSE
 where "user_id" is null
 group by "lists"."id"
-  `).table("lists");
+  `).publishAs("lists");
 })
 ```
+
+## Publishing two different views on the same table
+
+// XXX use publishAs to specify different table names for the client
 

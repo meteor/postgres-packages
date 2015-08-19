@@ -17,7 +17,7 @@ const QBProto = Meteor.isServer ?
 
 QBProto._publishCursor = function (sub) {
   const queryStr = this.toString();
-  const tableName = this._single.table;
+  const tableName = this._publishAs ? this._publishAs : this._single.table;
   return new PG.Query(queryStr, tableName)._publishCursor(sub);
 };
 
@@ -25,17 +25,17 @@ const oldRaw = knex.raw;
 knex.raw = function () {
   const ret = oldRaw.apply(knex, arguments);
 
-  ret.table = (tableName) => {
-    ret._tableName = tableName;
+  ret.publishAs = (tableName) => {
+    ret._publishAs = tableName;
     return ret;
   };
 
   ret._publishCursor = (sub) => {
-    if (! ret._tableName) {
-      throw new Error("Need to set table name with .table() if publishing a raw query.");
+    if (! ret._publishAs) {
+      throw new Error("Need to set table name with .publishAs() if publishing a raw query.");
     }
 
-    return new PG.Query(ret.toString(), ret._tableName)._publishCursor(sub);
+    return new PG.Query(ret.toString(), ret._publishAs)._publishCursor(sub);
   };
 
   return ret;
@@ -91,6 +91,10 @@ QBProto.run = function () {
   // XXX will not work for things like "insert V into T returning *"
   const ret = minimongo[method](...args);
   return (method === 'find') ? ret.fetch() : ret;
+};
+
+QBProto.publishAs = function publishAs(tableName) {
+  this._publishAs = tableName;
 };
 
 const bookshelf = Bookshelf(knex);
