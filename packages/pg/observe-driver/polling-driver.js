@@ -1,9 +1,9 @@
-import {EventEmitter} from 'events';
-import Future from 'fiber/future';
-import pg from 'pg';
-import {murmur3} from 'murmurhash-js';
+const {EventEmitter} = Npm.require('events');
+const Future = Npm.require('fibers/future');
+const pg = Npm.require('pg');
+const {murmur3} = Npm.require('murmurhash-js');
 
-class PgLiveQuery extends EventEmitter {
+PgLiveQuery = class PgLiveQuery extends EventEmitter {
   constructor({connectionUrl, channel}) {
     super();
 
@@ -41,15 +41,16 @@ class PgLiveQuery extends EventEmitter {
       const removed = callbacks.removed || noop;
 
       const cb = (updates, qh) => {
+        console.log(updates, qh, queryHash);
         if (queryHash !== qh) return;
-        updates.removed.forEach(r => removed(r));
-        updates.changed.forEach(r => changed(r));
-        updates.added.forEach(r => added(r));
+        updates.removed.forEach(v => removed(v));
+        updates.changed.forEach((v) => changed(v[0], v[1]));
+        updates.added.forEach(v => added(v));
       };
 
       const handle = {
         stop: () => {
-          this._stopSelect(queryHash);
+          this._stopSelect(handle);
         },
         _queryHash: queryHash,
         _cb: cb
@@ -65,16 +66,33 @@ class PgLiveQuery extends EventEmitter {
       return handle;
   }
 
+  // stop all activity
+  stop() {
+    const queries = Object.keys(this.queriesByTable).map((table) => {
+      return 'DROP TRIGGER IF EXISTS "' +
+             this.channel + '_' + table + '" ON "' + table + '"';
+    });
+    queries.push('DROP FUNCTION "' + this.triggerFunction + '"() CASCADE');
+    this._runQueries (queries);
+
+    this.cleanupCbs.forEach(cb => cb());
+  }
+
   _setupSelect(query, params, pollValidators, handle) {
     const queryHash = handle._queryHash;
 
-    if (queryHash in this.queries) {
+    if (
+      (queryHash in this.queries) &&
+      this.queries[queryHash].status !== 'stopped') {
       // dedup
       const queryBuffer = this.queries[queryHash];
       queryBuffer.handlers.push(handle);
 
+      // XXX pollValidators are dropped in this case? What if they
+      // were different from the current ones?
+
       // wait until it is populated
-      if (! queryBuffer.initialized) {
+      if (queryBuffer.status === 'active') {
         queryBuffer.initializedFuture.wait();
       }
       return;
@@ -90,7 +108,8 @@ class PgLiveQuery extends EventEmitter {
       // where we store the working set
       data: {},
       // until initialized, deduplicated queries should await
-      initialized: false,
+      // initializing/active/stopped
+      status: 'initializing',
       initializedFuture: new Future
     };
 
@@ -115,7 +134,7 @@ class PgLiveQuery extends EventEmitter {
       triggersQueries.push(
         'CREATE TRIGGER "' + triggerName + '" ' +
         'AFTER INSERT OR UPDATE OR DELETE ON "' + table + '" ' +
-        'FOR EACH ROW EXECUTE PROCEDURE "' + this.triggerFun + '"()');
+        'FOR EACH ROW EXECUTE PROCEDURE "' + this.triggerFunction + '"()');
     });
 
     if (triggersQueries.length !== 0) {
@@ -123,12 +142,55 @@ class PgLiveQuery extends EventEmitter {
     }
 
     this.queue.push(queryHash);
-    queryBuffer.initializedFuture.wait();
+    this._drainQueue();
+    if (newBuffer.status === 'initializing')
+      newBuffer.initializedFuture.wait();
+  }
+
+  _stopSelect(handle) {
+    this.removeListener('update', handle._cb);
+    const queryBuffer = this.queries[handle._queryHash];
+    const pos = queryBuffer.handlers.indexOf(handle);
+    if (pos > -1) {
+      queryBuffer.handles.splice(pos, 1);
+    }
+    if (! queryBuffer.handles.length) {
+      this._stopQuery(handle._queryHash);
+    }
+  }
+
+  _stopQuery(queryHash) {
+    // stop buffer
+    const queryBuffer = this.queries[queryHash];
+    queryBuffer.status = 'stopped';
+
+    // remove from the queue updates
+    this.queue = this.queue.filter(hash => hash !== queryHash);
+
+    // remove from queriesByTable
+    const {query, params} = queryBuffer;
+    const tablesInQuery =
+      findDependentRelations(this.client, query, params);
+
+    tablesInQuery.forEach((table) => {
+      const pos = this.queriesByTable[table].indexOf(queryHash);
+      if (pos > -1) {
+        this.queriesByTable[table].splice(pos, 1);
+        if (! this.queriesByTable[table].length)
+          this._stopTableTriggers(table);
+      }
+    });
+
+    // schedule remove buffer
+    Meteor.setTimeout(() => {
+      if (this.queries[queryHash].status === 'stopped')
+        delete this.queries[queryHash];
+    }, 0);
   }
 
   _setupTriggers() {
     const {triggerFunction, channel} = this;
-    this._runQuery(
+    this._runQueries(
       [loadQuery('setup-triggers', { triggerFunction, channel })],
       (err) => {
         if (err) {
@@ -138,10 +200,17 @@ class PgLiveQuery extends EventEmitter {
     );
   }
 
+  _stopTableTriggers() {
+    // right now it is too hard to deal with the concurrency of
+    // adding/removing triggers
+    // so we cleanup triggers in the very-very end
+  }
+
   _setupListener() {
     const allFuture = new Future;
+    const Mbe = Meteor.bindEnvironment;
 
-    pg.connect(this.connectionUrl, (error, client, done) => {
+    pg.connect(this.connectionUrl, Mbe((error, client, done) => {
       if (error) {
         allFuture.throw(error);
         return;
@@ -149,14 +218,14 @@ class PgLiveQuery extends EventEmitter {
 
       this.client = client;
       this.client.querySync =
-        Meteor.wrapAsync(this.client.query.bind(this.query));
+        Meteor.wrapAsync(this.client.query.bind(this.client));
       this.cleanupCbs.push(done);
-      
-      client.query('LISTEN "' + this.channel + '"', (error) => {
-        if (error) { allFuture.throw(error); return; }
-      });
 
-      const Mbe = Meteor.bindEnvironment;
+      client.query('LISTEN "' + this.channel + '"', Mbe((error) => {
+        if (error) { this.emit('error', error); }
+      }));
+
+
       client.on('notification', Mbe((info) => {
         let payload = this._processNotification(info.payload);
         // Only continue if full notification has arrived
@@ -165,7 +234,7 @@ class PgLiveQuery extends EventEmitter {
         try {
           payload = JSON.parse(payload);
         } catch(error) {
-          allFuture.throw(new Error('INVALID_NOTIFICATION ' + payload));
+          this.emit('error', new Error('INVALID_NOTIFICATION ' + payload));
           return;
         }
 
@@ -192,9 +261,11 @@ class PgLiveQuery extends EventEmitter {
           });
         }
       }));
-    });
 
-    return allFuture.wait();
+      allFuture.return();
+    }));
+
+    allFuture.wait();
   }
 
   _updateQuery(queryHash) {
@@ -221,10 +292,10 @@ class PgLiveQuery extends EventEmitter {
     const update = this._processDiff(queryBuffer.data, newData);
     queryBuffer.data = newData;
 
-    if (queryBuffer.initialized) {
+    if (queryBuffer.status === 'active') {
       this.emit('update', update, queryHash);
     } else {
-      queryBuffer.initialized = true;
+      queryBuffer.status = 'active';
       const queryFuture = queryBuffer.initializedFuture;
       queryBuffer.initializedFuture = null;
       queryFuture.return();
@@ -236,22 +307,25 @@ class PgLiveQuery extends EventEmitter {
     const changed = [];
     const added = [];
 
-    Object.keys(oldData).forEach((oldRow) => {
-      if (! newData[oldRow.id])
-        removed.push(oldRow);
+    Object.keys(oldData).forEach((id) => {
+      const oldRow = oldData[id];
+      if (! newData[id])
+        removed.push(
+          filterHashProperties(oldRow));
     });
-    Object.keys(newData).forEach((newRow) => {
-      const id = newRow.id;
+    Object.keys(newData).forEach((id) => {
+      const newRow = newData[id];
       if (oldData[id]) {
         const oldRow = oldData[id];
         if (oldRow._hash !== newRow._hash) {
-          changed.push(
+          changed.push([
             filterHashProperties(newRow),
             filterHashProperties(oldRow)
-          );
+          ]);
         }
       } else {
-        added.push(newRow);
+        added.push(
+          filterHashProperties(newRow));
       }
     });
 
@@ -317,7 +391,8 @@ class PgLiveQuery extends EventEmitter {
     const allFuture = new Future;
     const futures = [];
 
-    pg.connect(this.connectionUrl, (error, client, done) => {
+    const Mbe = Meteor.bindEnvironment;
+    pg.connect(this.connectionUrl, Mbe((error, client, done) => {
       if (error) { allFuture.throw(error); return; }
 
       queries.forEach((query) => {
@@ -331,7 +406,6 @@ class PgLiveQuery extends EventEmitter {
         }
 
         const future = new Future;
-        const Mbe = Meteor.bindEnvironment;
         client.query(query, params, Mbe(function (error, result) {
           if (error) {
             done();
@@ -346,14 +420,14 @@ class PgLiveQuery extends EventEmitter {
       Future.wait(futures);
       done();
       allFuture.return(futures.map(future => future.get()));
-    });
+    }));
 
     return allFuture.wait();
   }
 }
 
 function loadQuery(name, kwargs) {
-  const queryTemplate = Assets.getText(name + '.sql');
+  const queryTemplate = Assets.getText('observe-driver/' + name + '.sql');
   let query = queryTemplate;
   Object.keys(kwargs).forEach(function (argName) {
     query = query.replace(
@@ -385,22 +459,8 @@ function findDependentRelations(client, query, params) {
     return found;
   };
 
-  const fut = new Future;
-
-  client.query(
-    'EXPLAIN (FORMAT JSON) ' + query, params,
-    function (error, result) {
-      if (error) {
-        fut.throw(error);
-        return;
-      }
-
-      var nodeWalkerResult = nodeWalker(result.rows[0]['QUERY PLAN'][0]['Plan']);
-
-      fut.return(nodeWalkerResult);
-    });
-
-  return fut.wait();
+  const explained = client.querySync('EXPLAIN (FORMAT JSON) ' + query, params);
+  return nodeWalker(explained.rows[0]['QUERY PLAN'][0]['Plan']);
 }
 
 function noop () {}

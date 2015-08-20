@@ -18,7 +18,7 @@ WITH
 
 SELECT
   result_with_hashes.*
-FROM data
+FROM result_with_hashes
 WHERE NOT (_hash = ANY (
   /* NOTE the tripple dollar on the left */
   $$$hashParam$$))

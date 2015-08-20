@@ -7,7 +7,8 @@ Package.describe({
 
 Npm.depends({
   'pg-live-select': '1.0.3',
-  'pg': '4.4.1'
+  'pg': '4.4.1',
+  'murmurhash-js': '1.0.0'
 });
 
 Package.onUse(function(api) {
@@ -47,4 +48,16 @@ Package.onTest(function(api) {
   api.use('tinytest');
   api.use('simple:pg');
   api.addFiles('pg-tests.js');
+
+  api.use('ecmascript');
+
+  api.use('random');
+  api.use('underscore');
+  api.addFiles(['observe-driver/polling-driver.js'], 'server');
+  api.addFiles(['observe-driver/tests.js'], 'server');
+  api.addFiles([
+    'observe-driver/setup-triggers.sql',
+    'observe-driver/poll-n-diff.sql',
+    'observe-driver/poll.sql'
+  ], 'server', {isAsset: true});
 });

@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "murmurhash-js": {
+      "version": "1.0.0"
+    },
     "pg": {
       "version": "4.4.1",
       "dependencies": {
