@@ -61,3 +61,9 @@ Meteor.methods({
 In some cases, the schema might be so different on the server and the client that you need to write a totally separate simulation, or have no simulation at all.
 
 // XXX write this
+
+## Transactions
+
+One huge benefit of using Postgres over MongoDB is the ability to have transactions.
+
+// XXX how do you use them
