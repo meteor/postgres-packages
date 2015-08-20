@@ -1,8 +1,12 @@
 <h1>Working with relational data</h1>
 
+In PostgreSQL, people will often have database schemas that are normalized and rely heavily on foreign keys and joins to assemble data. Here are some strategies to publish data like this to the client in Meteor.
+
 ## Publishing relational data
 
-// XXX explanation
+Most of the time, the best thing to do is to publish the individual rows of the appropriate tables to the client, and then do the relational stuff on the client. This will save you from doing super complex joins and aggregates on the server, and will give you maximum flexibility for how to use the data on the client.
+
+If you want to publish data that includes aggregates or transformations, see the section on that in the [page about publications](publish.md).
 
 ```js
 Meteor.publish("users-posts-and-their-comments", function() {
