@@ -2,8 +2,9 @@ site_name: Meteor PostgreSQL
 theme: readthedocs
 pages:
 - Introduction: index.md
-- Client-side data cache: client.md
 - DB setup and migrations: migrations.md
+- Client-side data cache: client.md
 - Publishing data to the client: publish.md
 - Writing to the database with methods: methods.md
+- Relational data: relations.md
 - Using transactions inside methods: transactions.md

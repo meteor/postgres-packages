@@ -16,36 +16,7 @@ The above code will return the real row from the database if called on the serve
 
 ## Relations
 
-// XXX relations are a work in progress. I don't know if this approach will work on the server.
-
-When you declare a table, you can also specify methods that will be attached to every row retrieved from the table. You do this by declaring a class, and then passing it as an option to `PG.Table`, like so:
-
-```js
-// Declare class
-class List extends PG.Model {
-  todos() {
-    // Partially built query that encodes the relation
-    return Todos.knex().where({list_id: this._id});
-  }
-}
-
-// Define table, passing in the class as an option
-Lists = new PG.Table('lists', {
-  modelClass: List
-});
-```
-
-Now, you can call methods on the rows you retrieve to do simple relations:
-
-```js
-// Get a list from the table
-const list = Lists.knex().where({ id: listId }).run()[0];
-
-// Get the todo items from the lists, sorted by timestamp
-const todos = list.todos().orderBy("created_at", "DESC").run(),
-```
-
-Note that since the `todos()` method returns a partially built query but doesn't call `run()` on it, you can add additional sorting and filtering before finally executing the query.
+Read about how to use relations on the client here: [Relations](relations.md)
 
 ## Minimongo-compatible
 
