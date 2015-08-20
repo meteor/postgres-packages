@@ -16,6 +16,8 @@ The above code will return the real row from the database if called on the serve
 
 ## Relations
 
+// XXX relations are a work in progress. I don't know if this approach will work on the server.
+
 When you declare a table, you can also specify methods that will be attached to every row retrieved from the table. You do this by declaring a class, and then passing it as an option to `PG.Table`, like so:
 
 ```js
@@ -44,3 +46,9 @@ const todos = list.todos().orderBy("created_at", "DESC").run(),
 ```
 
 Note that since the `todos()` method returns a partially built query but doesn't call `run()` on it, you can add additional sorting and filtering before finally executing the query.
+
+## Minimongo-compatible
+
+Currently, calling the Knex query builder on the client actually generates Minimongo queries, and the client-side data cache is Minimongo under the hood. This has some desirable properties - it will be compatible with any UI packages that rely on Minimongo or Minimongo cursors to function!
+
+Currently, it's not easy to extract a cursor, but we'll be working on that in the future.
