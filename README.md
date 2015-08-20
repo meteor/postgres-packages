@@ -6,6 +6,6 @@ This is a heavily work in progress experimental exploration of what it would loo
 
 To see the patterns we are working with, check out the guide here: http://meteor-postgres.readthedocs.org/en/latest/
 
-![Dumbo](/img/dumbo.jpg)
+----------
 
-[![Cage the elephant](http://i.imgur.com/mSIkpQY.png)](https://www.youtube.com/watch?v=HKtsdZs9LJo)
+![Dumbo](/img/dumbo.jpg)
