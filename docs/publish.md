@@ -8,7 +8,7 @@ Since SQL queries can do joins and aggregates, it's very possible to end up with
 
 If you just have some rows in your database that you want to use on the client, publishing the data is very simple, and the schema on the client will be the same as on the server.
 
-### With Knex
+<h3>With Knex</h3>
 
 ```js
 // Define the table
@@ -27,7 +27,7 @@ Meteor.publish('todos', function(listId) {
 });
 ```
 
-### With raw query
+<h3>With raw query</h3>
 
 Notice that when you don't use the query builder, you need to manually specify
 the name of the table with `publishAs` so that Meteor knows what table to put the data in on the
@@ -73,7 +73,7 @@ This selects rows from the `lists` table, and then adds an extra column called `
 
 In this case, on the client the published data will have one more column than the table on the server, so you should consider this when making queries on the client or server.
 
-### Publishing with Knex
+<h3>Publishing with Knex</h3>
 
 Here is how you could write this query with Knex (it's a little ugly, I know):
 
@@ -91,7 +91,7 @@ Meteor.publish("publicLists", function () {
 })
 ```
 
-### Publishing with raw SQL query
+<h3>Publishing with raw SQL query</h3>
 
 Note that you can use ES2015 template strings to write multiline queries nicely. Also, Knex handles writing `is null` for you based on the object you pass to `.where()`, but in raw SQL you have to know ahead of time if the argument is going to be null or not.
 
