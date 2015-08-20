@@ -15,5 +15,5 @@ check
 
 simple:pg
 accounts-password
-useraccounts:bootstrap
+accounts-ui
 twbs:bootstrap

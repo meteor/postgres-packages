@@ -2,6 +2,8 @@ accounts-base@1.2.1-rc.0
 accounts-base-pg-driver@0.0.1
 accounts-password@1.1.2-rc.0
 accounts-password-pg-driver@0.0.1
+accounts-ui@1.1.6-rc.0
+accounts-ui-unstyled@1.1.8-rc.0
 autoupdate@1.2.3-rc.0
 babel-compiler@5.8.20-rc.0
 babel-runtime@0.1.4-rc.0
@@ -39,6 +41,7 @@ id-map@1.0.4-rc.0
 jquery@1.11.4-rc.0
 jsx@0.1.5
 launch-screen@1.0.3-rc.0
+less@2.5.0-rc.1_1
 livedata@1.0.14-rc.0
 localstorage@1.0.4-rc.0
 logging@1.0.8-rc.0
@@ -62,10 +65,11 @@ reactive-var@1.0.6-rc.0
 reload@1.1.4-rc.0
 retry@1.0.4-rc.0
 routepolicy@1.0.6-rc.0
+service-configuration@1.0.5-rc.0
+session@1.1.1-rc.0
 sha@1.0.4-rc.0
 simple:bookshelf@0.0.1
 simple:pg@0.0.1
-softwarerero:accounts-t9n@1.0.9
 spacebars@1.0.7-rc.0
 spacebars-compiler@1.0.7-rc.0
 srp@1.0.4-rc.0
@@ -77,7 +81,5 @@ twbs:bootstrap@3.3.5
 ui@1.0.7-rc.0
 underscore@1.0.4-rc.0
 url@1.0.5-rc.0
-useraccounts:bootstrap@1.12.2
-useraccounts:core@1.12.2
 webapp@1.2.2-rc.0
 webapp-hashing@1.0.4-rc.0

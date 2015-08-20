@@ -6,7 +6,7 @@ Package.describe({
 });
 
 Npm.depends({
-  'pg-live-select': '1.0.3',
+  'pg-live-select': 'https://github.com/Slava/pg-live-select/tarball/fc443165b070572238a124d100ca7fe6dbb7313e',
   'pg': '4.4.1',
   'murmurhash-js': '1.0.0'
 });
