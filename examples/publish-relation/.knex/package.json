@@ -1,0 +1,16 @@
+{
+  "name": "knex",
+  "version": "1.0.0",
+  "description": "Run the knex CLI inside here.",
+  "main": "knexfile.js",
+  "dependencies": {
+    "knex": "^0.8.6",
+    "pg": "^4.4.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

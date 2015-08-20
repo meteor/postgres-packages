@@ -15,9 +15,15 @@ const QBProto = Meteor.isServer ?
                 Knex.Client.prototype.QueryBuilder.prototype :
                 Knex.QueryBuilder.prototype;
 
+// Apparently you need this to publish multiple cursors...
+QBProto._getCollectionName = function () {
+  const tableName = this._publishAs ? this._publishAs : this._single.table;
+  return tableName;
+};
+
 QBProto._publishCursor = function (sub) {
   const queryStr = this.toString();
-  const tableName = this._publishAs ? this._publishAs : this._single.table;
+  const tableName = this._getCollectionName();
   return new PG.Query(queryStr, tableName)._publishCursor(sub);
 };
 

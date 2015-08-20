@@ -6,8 +6,8 @@ AccountsDBClientPG = class AccountsDBClientPG {
   }
 
   insertUser() {
-    const result = PG.await(this.Users.model.forge().save());
-    return result.id;
+    const result = PG.await(this.Users.knex().insert({}).returning("id"));
+    return result[0];
   }
 
   getUserById(id) {
@@ -19,7 +19,7 @@ AccountsDBClientPG = class AccountsDBClientPG {
   }
 
   _getUserWhere(where) {
-    const userRow = PG.await(this.Users.model.where(where).fetch()).attributes;
+    const userRow = this.Users.knex().where(where).run()[0];
 
     const createdAt = userRow.created_at;
     const _id = userRow.id;
@@ -98,15 +98,15 @@ AccountsDBClientPG = class AccountsDBClientPG {
 
   // XXX should be in facebook package or something
   _getServiceData(userId) {
-    const serviceDataRows = PG.await(this.Services.model.where({
+    const serviceDataRows = this.Services.knex().where({
       user_id: userId
-    }).fetchAll());
+    }).run();
 
     const serviceData = {};
     serviceDataRows.forEach((row) => {
-      const serviceName = row.get("service_name");
+      const serviceName = row.service_name;
       serviceData[serviceName] = serviceData[serviceName] || {};
-      serviceData[serviceName][row.get("key")] = row.get("value");
+      serviceData[serviceName][row.key] = row.value;
     });
 
     return serviceData;
