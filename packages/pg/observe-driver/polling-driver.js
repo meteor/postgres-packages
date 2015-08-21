@@ -281,6 +281,12 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       stringifiedHashesList: oldHashes.concat('dummy').map(s => '(\'' + s + '\')').join(', ')
     }), queryParams).rows;
 
+    if (queryBuffer.status === 'stopped') {
+      // This query was stopped while we were running the query to poll the db.
+      // No point doing any extra work.
+      return;
+    }
+
     const newData = {};
     const removedHashes = {};
     result.forEach((row) => {
@@ -307,6 +313,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       queryBuffer.initializedFuture = null;
       queryFuture.return();
     } else {
+      console.log(queryBuffer);
       throw new Error('This should not happen! Cannot reanimate a stopped livepg observe.');
     }
   }
