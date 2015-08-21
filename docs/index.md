@@ -69,9 +69,9 @@ meteor "$@"
 
 ## Acknowledgements
 
-Thank you to the awesome work of:
+Thank you to:
 
-1. Ben Green on his Meteor PostgreSQL driver: [numtel/meteor-pg](https://github.com/numtel/meteor-pg)
-2. Tim Griesser on the awesome Knex SQL query builder: [tgriesser/knex](https://github.com/tgriesser/knex)
+1. Ben Green for his Meteor PostgreSQL driver: [numtel/meteor-pg](https://github.com/numtel/meteor-pg)
+2. Tim Griesser for the awesome Knex SQL query builder: [tgriesser/knex](https://github.com/tgriesser/knex)
 3. The [Space Elephant](http://www.meteorpostgres.com/) team for their inspirational project and Devshop talk
 
