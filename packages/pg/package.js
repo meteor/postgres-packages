@@ -38,7 +38,7 @@ Package.onUse(function(api) {
   ]);
 
   // observe driver
-  api.use('underscore', 'server');
+  api.use(['underscore', 'ddp-server'], 'server');
   api.addFiles(['observe-driver/polling-driver.js'], 'server');
   api.addFiles([
     'observe-driver/setup-triggers.sql',
@@ -63,6 +63,7 @@ Package.onUse(function(api) {
 
   // EXPORT
   api.export('PG');
+  api.export('PgLiveQuery');
 });
 
 Package.onTest(function(api) {
@@ -72,5 +73,6 @@ Package.onTest(function(api) {
 
   api.use('ecmascript');
 
+  api.use(['ddp-server'], 'server');
   api.addFiles(['observe-driver/tests.js'], 'server');
 });
