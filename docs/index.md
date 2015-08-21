@@ -4,6 +4,8 @@ Welcome to the first full-stack implementation of SQL for Meteor.
 
 This is still a work in progress, and there is [a lot left to do](contribute.md), but we're really excited about what we have so far and wanted to share it. Some parts of the implementation are more reliable and stable than others, and we would love to have more help to add tests, detailed documentation, and new features.
 
+[Check out the code on GitHub.](https://github.com/meteor/postgres-packages)
+
 ## Concepts
 
 This is the simplest possible implementation of using a SQL database, specifically PostgreSQL, that we could come up with. The experience is not yet 100% seamless, and you have to put in some manual work for migrations, etc. Here are some core aspects to the design:
