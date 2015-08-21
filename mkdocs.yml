@@ -3,6 +3,7 @@ theme: readthedocs
 pages:
 - Introduction: index.md
 - DB setup and migrations: migrations.md
+- Running SQL queries with Knex: knex.md
 - Client-side data cache: client.md
 - Publishing data to the client: publish.md
 - Writing to the database with methods: methods.md

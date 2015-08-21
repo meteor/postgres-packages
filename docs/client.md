@@ -34,6 +34,17 @@ Todos.where("list_id", 3).observe({
 });
 ```
 
+Here is how you can use a Knex query in a Blaze helper:
+
+```js
+Template.todos.helpers({
+  todos(listId) {
+    // Note that you don't need to call fetch() since it works just like a Minimongo cursor
+    return Todos.where("list_id", listId);
+  }
+})
+```
+
 ## _id field
 
 Rows you extract from the client-side cache will, in addition to all of the fields you expect, have an extra `_id` field which is a stringified version of the row's `id`. This is due to an internal implementation detail in DDP that requires every document to have a string `_id`.
