@@ -13,11 +13,11 @@ TodoListPage = React.createClass({
     // Subscribe to the tasks we need to render this component
     const tasksSubHandle = Meteor.subscribe("todos", listId);
 
-    const list = Lists.knex().where({ id: listId }).run()[0];
+    const list = Lists.where({ id: listId }).fetch()[0];
 
     if (tasksSubHandle.ready()) {
       return {
-        tasks: list.todos().orderBy("created_at", "DESC").run(),
+        tasks: list.todos().orderBy("created_at", "DESC").fetch(),
         list: list,
         tasksLoading: false
       };

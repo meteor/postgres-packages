@@ -59,12 +59,12 @@ AppBody = React.createClass({
     // If we are at the root route, and the subscrioptions are ready
     if (routes.length > 1 && routes[1].isDefault && subsReady) {
       // Redirect to the route for the first todo list
-      this.replaceWith("todoList", { listId: Lists.knex().run()[0].id });
+      this.replaceWith("todoList", { listId: Lists.fetch()[0].id });
     }
 
     return {
       subsReady: subsReady,
-      lists: Lists.knex().orderBy("created_at", "DESC").run(),
+      lists: Lists.orderBy("created_at", "DESC").fetch(),
       currentUser: Meteor.user(),
       disconnected: ShowConnectionIssues.get() && (! Meteor.status().connected)
     };
