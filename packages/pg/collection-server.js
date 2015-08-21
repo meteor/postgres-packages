@@ -46,8 +46,20 @@ PG.knex.raw = function () {
 
 // a way for the Knex queries to run using Fibers on the server
 QBProto.run = function run() {
-  return PG.await(this);
-}
+  const result = PG.await(this);
+  const table = this._single.table;
+  const method = this._method;
+
+  // XXX weird use of global vars
+  const fence = DDPServer._CurrentWriteFence.get();
+  if (fence) {
+    if (method !== 'select') {
+      PG._livePg.appendPendingWrite(table, fence.beginWrite());
+    }
+  }
+
+  return result;
+};
 
 QBProto.fetch = function fetch() {
   if (this._method === 'select') {

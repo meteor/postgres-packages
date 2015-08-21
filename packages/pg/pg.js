@@ -9,6 +9,7 @@ var livePg = new PgLiveQuery({
   connectionUrl: PG.defaultConnectionUrl,
   channel: 'simple_pg_' + Random.id(4)
 });
+PG._livePg = livePg;
 
 PG.Query = function (sqlString, params, name) {
   if (! name && (typeof params === 'string')) {
@@ -19,11 +20,6 @@ PG.Query = function (sqlString, params, name) {
   this.name = name;
   this.sqlString = sqlString;
   this.params = params || [];
-};
-
-PG.Query.prototype.run = function () {
-  var queryFn = Meteor.wrapAsync(pgClient.query.bind(pgClient));
-  return queryFn(this.sqlString, this.params).rows;
 };
 
 PG.Query.prototype.observe = function (cbs) {

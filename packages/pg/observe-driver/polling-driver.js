@@ -77,6 +77,46 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
     this.cleanupCbs.forEach(cb => cb());
   }
 
+  // Required to work with the write fence.
+  // Adds the "write" (object that can be committed) to the queue for
+  // the table. Next time a repoll for the table-dependent queries
+  // happens, the writes will be committed.
+  appendPendingWrite(table, write) {
+    const queries = this.queriesByTable[table];
+    const activeQueriesExist = queries.some(
+      q => this.queries[q].status !== 'stopped');
+
+    if (activeQueriesExist) {
+      // XXX a pretty hacky way to wait until every query commits
+      write._pendings = 0;
+      queries.forEach((q) => {
+        if (this.queries[q].status === 'stopped')
+          return;
+
+        write._pendings++;
+        this.queries[q].pendingWrites.push(write);
+      });
+    } else {
+      // no active observes for this table
+      write.committed();
+    }
+  }
+
+  // The method enforcing a repoll for every query that observes the
+  // given table. After repoll, commits the pending writes on a write
+  // fence
+  scheduleRepoll(table) {
+    const inQueue = {};
+    this.queue.forEach(q => inQueue[q] = true);
+
+    this.queriesByTable[table].forEach((q) => {
+      if (! inQueue[q])
+        this.queue.push(q);
+    });
+
+    this._scheduleQueueDrain();
+  }
+
   _setupSelect(query, params, pollValidators, handle) {
     const queryHash = handle._queryHash;
 
@@ -109,7 +149,9 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       // until initialized, deduplicated queries should await
       // initializing/active/stopped
       status: 'initializing',
-      initializedFuture: new Future
+      initializedFuture: new Future,
+      // a queue for the write fence
+      pendingWrites: []
     };
 
     // add immediately before any yields, so the new deduped queries see it
@@ -141,7 +183,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
     }
 
     this.queue.push(queryHash);
-    this._drainQueue();
+    this._scheduleQueueDrain();
     if (newBuffer.status === 'initializing')
       newBuffer.initializedFuture.wait();
   }
@@ -274,6 +316,9 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
     const client = this.client;
     const queryParams = queryBuffer.params.concat([ oldHashes ]);
 
+    const writesToCommit = queryBuffer.pendingWrites.splice(
+      0, queryBuffer.pendingWrites.length);
+
     const result = client.querySync(loadQuery('poll', {
       query: queryBuffer.query,
       // an extra param that we append in our wrapper: old hashes
@@ -305,6 +350,18 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
     const update = this._processDiff(queryBuffer.data, removedHashes, newData);
     queryBuffer.data = update.newSnapshot;
 
+    // XXX possibly doesn't work: commit writes on next tick, assuming
+    // all listeners have processed the "update"/initial observe
+    Meteor.defer(function () {
+      writesToCommit.forEach((write) => {
+        write._pendings--;
+        if (write._pendings === 0) {
+          // safe to commit, all queries that care about it have fired
+          write.committed();
+        }
+      });
+    });
+
     if (queryBuffer.status === 'active') {
       this.emit('update', update, queryHash);
     } else if (queryBuffer.status === 'initializing') {
@@ -313,7 +370,6 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       queryBuffer.initializedFuture = null;
       queryFuture.return();
     } else {
-      console.log(queryBuffer);
       throw new Error('This should not happen! Cannot reanimate a stopped livepg observe.');
     }
   }
@@ -365,6 +421,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
     Meteor.setTimeout(this._drainQueue.bind(this), 0);
   }
 
+  // probably should never be called directly except for the first time
   _drainQueue() {
     this.drainQueue = false;
     const queriesToUpdate =

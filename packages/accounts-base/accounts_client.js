@@ -185,12 +185,10 @@ Ap.callLoginMethod = function (options) {
                 }
               }
 
-              Meteor.setTimeout(function () {
                 // Possibly a weird callback to call, but better than nothing if
                 // there is a reconnect between "login result received" and "data
                 // ready".
                 loginCallbacks(error);
-              }, 300);
             }});
         }
       };
@@ -228,12 +226,10 @@ Ap.callLoginMethod = function (options) {
 
     // Make the client logged in. (The user data should already be loaded!)
     self.makeClientLoggedIn(result.id, result.token, result.tokenExpires);
-    Meteor.setTimeout(function () {
       // Possibly a weird callback to call, but better than nothing if
       // there is a reconnect between "login result received" and "data
       // ready".
       loginCallbacks(error);
-    }, 300);
   };
 
   if (!options._suppressLoggingIn)
