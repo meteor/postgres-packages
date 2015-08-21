@@ -1,12 +1,16 @@
 <h1>Contributing to the project</h1>
 
-There's a lot more work left before SQL and Meteor is ready for general use. We could use your help to get it done faster!
+There's a lot more work left before SQL and Meteor is ready for general use. We could use your help to get it done faster! Thank you in advance for helping make this project a reality.
 
 ## Try it out
 
-It will be hard to figure out what improvements to focus on without feedback. If you're an enterprising developer, try building some stuff with it and tell us what breaks. File issues [on GitHub](https://github.com/meteor/postgres-packages).
+It will be hard to figure out what improvements we should focus on without feedback. If you're an enterprising developer, try building some stuff with it and tell us what breaks. File issues [on GitHub](https://github.com/meteor/postgres-packages).
 
-## Code to be written
+## Write docs
+
+If you find that something in the documentation isn't well explained or could use improvements, or if you discovered some new information and want to share it, please submit a PR to the [docs](https://github.com/meteor/postgres-packages/tree/master/docs). This is just as valuable as new code, since without good documentation nobody will be able to use this stuff.
+
+## Write code
 
 ### Accounts
 
