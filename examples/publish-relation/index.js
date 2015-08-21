@@ -1,7 +1,7 @@
 if (Meteor.isClient) {
   Template.body.helpers({
     posts() {
-      return Posts.knex().run();
+      return Posts.select();
     }
   });
 
@@ -18,7 +18,7 @@ if (Meteor.isClient) {
     "/posts/insertPost"() {
       if (! Meteor.userId()) { throw new Meteor.Error("must-log-in") }
 
-      Posts.knex().insert({
+      Posts.insert({
         content: "This is a post!",
         user_id: Meteor.userId()
       }).run();
@@ -26,7 +26,7 @@ if (Meteor.isClient) {
     "/comments/insertComment"(post_id) {
       if (! Meteor.userId()) { throw new Meteor.Error("must-log-in") }
 
-      Comments.knex().insert({
+      Comments.insert({
         content: "This is a comment!",
         user_id: Meteor.userId(),
         post_id: post_id

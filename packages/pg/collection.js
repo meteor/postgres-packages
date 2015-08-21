@@ -41,3 +41,18 @@ PG.Table = class Table {
     }
   }
 }
+
+// Get the prototype of the query builder
+const QBProto = Meteor.isClient ?
+  Knex.QueryBuilder.prototype :
+  Knex.Client.prototype.QueryBuilder.prototype;
+
+// Proxy all query builder methods; so when you type MyTable.select() it does
+// MyTable.knex().select()
+const methods = Object.getOwnPropertyNames(QBProto);
+methods.forEach((methodName) => {
+  PG.Table.prototype[methodName] = function (...args) {
+    const qb = this.knex();
+    return qb[methodName].apply(qb, args);
+  };
+});
