@@ -13,6 +13,13 @@ Npm.depends({
 
 Package.onUse(function(api) {
   api.versionsFrom('1.1.0.3');
+
+  // PACKAGE DEPENDENCIES
+  api.use([
+    'ecmascript',
+    'simple:bookshelf'
+  ]);
+
   api.use([
     'random',
     'ejson',
@@ -21,26 +28,31 @@ Package.onUse(function(api) {
   ], 'server');
 
   api.use([
-    'ecmascript',
-    'simple:bookshelf'
-  ]);
-
-  api.use([
     'dburles:mongo-collection-instances',
     'mongo'
   ], 'client');
 
-  api.addFiles('pre.js');
-
+  // ADD FILES
   api.addFiles([
-    'pg.js'
-  ], 'server');
-
-  api.addFiles([
-    'collection.js',
+    'pre.js',
     'transaction.js'
   ]);
 
+  api.addFiles([
+    'pg.js',
+    'collection-server.js'
+  ], 'server');
+
+  api.addFiles([
+    'collection-client.js'
+  ], 'client')
+
+  // Needs to be loaded last, uses setup from client or server
+  api.addFiles([
+    'collection.js'
+  ]);
+
+  // EXPORT
   api.export('PG');
 });
 

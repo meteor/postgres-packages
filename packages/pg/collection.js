@@ -1,109 +1,4 @@
-if (Meteor.isServer) {
-  // hack so Knex from simple:bookshelf doesn't try to load 'pg'
-  Knex.Client.prototype.initializeDriver = function () {
-    this.driver = PG._npmModule;
-  };
-}
-
-const knex = Knex(Meteor.isServer ? {
-  client: 'pg',
-  connection: PG.defaultConnectionUrl
-} : null);
-
-// the prototype of the chained query builder from knex
-const QBProto = Meteor.isServer ?
-                Knex.Client.prototype.QueryBuilder.prototype :
-                Knex.QueryBuilder.prototype;
-
-// Apparently you need this to publish multiple cursors...
-QBProto._getCollectionName = function () {
-  const tableName = this._publishAs ? this._publishAs : this._single.table;
-  return tableName;
-};
-
-QBProto._publishCursor = function (sub) {
-  const queryStr = this.toString();
-  const tableName = this._getCollectionName();
-  return new PG.Query(queryStr, tableName)._publishCursor(sub);
-};
-
-const oldRaw = knex.raw;
-knex.raw = function () {
-  const ret = oldRaw.apply(knex, arguments);
-
-  ret.publishAs = (tableName) => {
-    ret._publishAs = tableName;
-    return ret;
-  };
-
-  ret._publishCursor = (sub) => {
-    if (! ret._publishAs) {
-      throw new Error("Need to set table name with .publishAs() if publishing a raw query.");
-    }
-
-    return new PG.Query(ret.toString(), ret._publishAs)._publishCursor(sub);
-  };
-
-  return ret;
-}
-
-// a way for the Knex queries to actually run w/o promises
-QBProto.run = function () {
-  if (Meteor.isServer) {
-    return PG.await(this);
-  }
-
-  const {
-    collection,
-    method,
-    selector,
-    modifier,
-    projection,
-    sort,
-    limit,
-    skip
-  } = this.toMongoQuery();
-
-  const options = {
-    sort, limit, skip,
-    fields: projection
-  };
-
-  if (! collection) {
-    throw new Error('Specify the table to query. E.g.: PG.knex("table")...');
-  }
-
-  // run this query against local minimongo
-  const minimongo = Mongo.Collection.get(collection);
-  const args = [];
-
-  if (! minimongo) {
-    throw new Error('Specified table "' + collection + '" is not registered on the Client');
-  }
-
-  if (method === 'find') {
-    args.push(selector, options);
-  }
-  if (method === 'insert') {
-    args.push(modifier);
-  }
-  if (method === 'update') {
-    args.push(selector, modifier, {multi: true});
-  }
-  if (method === 'remove') {
-    args.push(selector);
-  }
-
-  // XXX will not work for things like "insert V into T returning *"
-  const ret = minimongo[method](...args);
-  return (method === 'find') ? ret.fetch() : ret;
-};
-
-QBProto.publishAs = function publishAs(tableName) {
-  this._publishAs = tableName;
-};
-
-const bookshelf = Bookshelf(knex);
+const bookshelf = Bookshelf(PG.knex);
 const origModelForge = bookshelf.Model.forge;
 bookshelf.Model.forge = function () {
   const ret = origModelForge.apply(this, arguments);
@@ -114,7 +9,6 @@ bookshelf.Model.forge = function () {
   };
   return ret;
 };
-
 
 PG.Table = class Table {
   constructor(tableName, options = {}) {
@@ -139,38 +33,11 @@ PG.Table = class Table {
       // register a minimongo store for this table
       this.minimongo = new Mongo.Collection(tableName, minimongoOptions);
     } else {
-      const exists = PG.await(knex.schema.hasTable(tableName));
+      const exists = PG.await(PG.knex.schema.hasTable(tableName));
 
       if (!exists) {
         throw new Error(`Table '${tableName}' doesn't exist. Please create it in a migration.`);
       }
     }
   }
-}
-
-PG.Model = class Model {
-  constructor(doc) {
-    _.extend(this, doc);
-  }
-}
-
-PG.knex = knex;
-PG.await = null;
-
-if (Meteor.isServer) {
-  const Future = Npm.require('fibers/future');
-  function await(promise) {
-    var f = new Future();
-    promise.then(
-      Meteor.bindEnvironment(res => f.return(res)),
-      Meteor.bindEnvironment(err => f.throw(err))
-    );
-
-    return f.wait();
-  }
-  PG.await = await;
-} else {
-  // XXX will only work with the methods of Bookshelf as they use the
-  // version of BlueBird that we supplied over a transform with exposify.
-  PG.await = window.__Sync_BlueBird.await;
 }
