@@ -301,11 +301,13 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
 
     if (queryBuffer.status === 'active') {
       this.emit('update', update, queryHash);
-    } else {
+    } else if (queryBuffer.status === 'initializing') {
       queryBuffer.status = 'active';
       const queryFuture = queryBuffer.initializedFuture;
       queryBuffer.initializedFuture = null;
       queryFuture.return();
+    } else {
+      throw new Error('This should not happen! Cannot reanimate a stopped livepg observe.');
     }
   }
 
