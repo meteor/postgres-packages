@@ -56,3 +56,7 @@ console.log(ids);
 2. The `run` and `fetch` methods are new. They always run synchronously using Fibers on the server. (The default Knex API uses promises)
 3. On the client, `run` and `fetch` generate Minimongo queries under the hood and run them synchronously.
 3. We have implemented all relevant Mongo cursor methods, so you can pass around Knex queries just like you would a cursor. This means that if you are using Blaze to render your views, you can have your helper just return the cursor without calling `run` or `fetch`.
+
+## Knex docs
+
+Read more about how to use Knex in the [Knex docs](http://knexjs.org/). Let us know if there are some thing that don't work, or if we failed to document some differences.
