@@ -1,6 +1,6 @@
 # Use PostgreSQL with Meteor
 
-Welcome to the first full-stack implementation of SQL for Meteor.
+This is the first preview of a possible implementation of full-stack SQL for Meteor.
 
 This is still a work in progress, and there is [a lot left to do](contribute.md), but we're really excited about what we have so far and wanted to share it. Some parts of the implementation are more reliable and stable than others, and we would love to have more help to add tests, detailed documentation, and new features.
 
@@ -66,4 +66,12 @@ cd "$(dirname $0)"
 # Run the app, and pass through any arguments passed to the script
 meteor "$@"
 ```
+
+## Acknowledgements
+
+Thank you to the awesome work of:
+
+1. Ben Green on his Meteor PostgreSQL driver: [numtel/meteor-pg](https://github.com/numtel/meteor-pg)
+2. Tim Griesser on the awesome Knex SQL query builder: [tgriesser/knex](https://github.com/tgriesser/knex)
+3. The [Space Elephant](http://www.meteorpostgres.com/) team for their inspirational project and Devshop talk
 
