@@ -14,7 +14,6 @@ Meteor.publish("users-posts-and-their-comments", function() {
 
   const postsQuery = Posts
     .innerJoin("users", "posts.user_id", "users.id")
-    .select(["x", "y", "z"])
     .where({some: condition});
 
   const commentsQuery = Comments
@@ -54,10 +53,10 @@ Now, you can call methods on the rows you retrieve to do simple relations:
 
 ```js
 // Get a list from the table
-const list = Lists.where({ id: listId }).run()[0];
+const list = Lists.where({ id: listId }).fetch()[0];
 
 // Get the todo items from the list, sorted by timestamp
-const todos = list.todos().orderBy("created_at", "DESC").run(),
+const todos = list.todos().orderBy("created_at", "DESC").fetch(),
 ```
 
-Note that since the `todos()` method returns a partially built query but doesn't call `run()` on it, you can add additional sorting and filtering before finally executing the query.
+Note that since the `todos()` method returns a partially built query but doesn't call `run()` or `fetch()` on it, you can add additional sorting and filtering before finally executing the query.

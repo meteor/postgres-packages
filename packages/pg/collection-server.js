@@ -49,6 +49,14 @@ QBProto.run = function run() {
   return PG.await(this);
 }
 
+QBProto.fetch = function fetch() {
+  if (this._method === 'select') {
+    return this.run();
+  } else {
+    throw new Error("Can only call fetch on select queries.");
+  }
+}
+
 QBProto.publishAs = function publishAs(tableName) {
   this._publishAs = tableName;
 };

@@ -50,7 +50,7 @@ Meteor.methods({
       // The imcomplete_count column only exists on the client, since it is
       // generated from a join/aggregate on the server. We need to update it
       // manually
-      Lists.increment("incomplete_count", 1).run();
+      Lists.increment("incomplete_count", 1).where("id", listId).run();
     }
   }
 });

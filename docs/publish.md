@@ -20,10 +20,7 @@ Meteor.publish('todos', function(listId) {
   check(listId, Match.Integer);
 
   // Build a query with Knex and return it
-  return Todos
-    .select("*")
-    .from("todos")
-    .where("list_id", listId);
+  return Todos.where("list_id", listId);
 });
 ```
 
