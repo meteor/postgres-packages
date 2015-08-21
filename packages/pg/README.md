@@ -7,7 +7,7 @@ client-side cache.
 ## Observe Driver
 
 The current observe driver is a rewritten and modified version of the driver
-written [by Ben Green](github.com/numtel/pg-live-select).
+written [by Ben Green](https://github.com/numtel/pg-live-select).
 
 The driver currently only works with Postresql and here is how it works (polling
 driver):
