@@ -8,11 +8,6 @@ Lists = new PG.Table('lists', {
   modelClass: List
 });
 
-if (Meteor.isClient) {
-  // Stuff below here is server-only
-  return;
-}
-
 Meteor.methods({
   '/lists/add': function () {
     return Lists.insert({}).returning("id").run()[0];
@@ -20,6 +15,33 @@ Meteor.methods({
   '/lists/updateName': function (listId, newName) {
     Lists.update({name: newName}).where({id: listId}).run();
   },
+  '/lists/addTask': function (listId, newTaskText) {
+    const todo = {
+      list_id: listId,
+      text: newTaskText,
+      checked: false
+    };
+
+    if (this.isSimulation) {
+      // Since the database generates the timestamp, we need to do it manually
+      // in the simulation
+      todo.created_at = new Date();
+
+      // Since this field is generated via a join, we have to update it manually
+      // on the client
+      Lists.where("id", listId).increment("incomplete_count", 1).run();
+    }
+
+    Todos.insert(todo).run();
+  }
+});
+
+if (Meteor.isClient) {
+  // Stuff below here is server-only
+  return;
+}
+
+Meteor.methods({
   '/lists/togglePrivate': function (listId) {
     var list = Lists.where({id: listId}).run()[0];
 
@@ -53,14 +75,5 @@ Meteor.methods({
       // Delete the list itself
       Lists.where({id: listId}).delete().run();
     });
-  },
-  '/lists/addTask': function (listId, newTaskText) {
-    Todos.insert({
-      list_id: listId,
-      text: newTaskText,
-      checked: false
-    }).run();
-
-    // Lists.update(listId, {$inc: {incompleteCount: 1}});
   }
 });

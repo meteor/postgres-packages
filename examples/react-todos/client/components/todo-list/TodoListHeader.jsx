@@ -30,7 +30,7 @@ TodoListHeader = React.createClass({
     });
 
     Meteor.call("/lists/updateName",
-      this.props.list._id, this.state.nameInputValue);
+      this.props.list.id, this.state.nameInputValue);
   },
 
   titleChanged(event) {
@@ -47,7 +47,7 @@ TodoListHeader = React.createClass({
 
     const message = `Are you sure you want to delete the list ${this.props.list.name}?`;
     if (confirm(message)) {
-      Meteor.call("/lists/delete", this.props.list._id, (err, res) => {
+      Meteor.call("/lists/delete", this.props.list.id, (err, res) => {
         if (err) {
           alert(errorMessages[err.error]);
           return;
@@ -65,7 +65,7 @@ TodoListHeader = React.createClass({
       "final-list-private": "Sorry, you cannot make the final public list private!",
     };
 
-    Meteor.call("/lists/togglePrivate", this.props.list._id, (err, res) => {
+    Meteor.call("/lists/togglePrivate", this.props.list.id, (err, res) => {
       if (err) {
         if (_.has(errorMessages, err.error)) {
           alert(errorMessages[err.error]);
@@ -79,7 +79,7 @@ TodoListHeader = React.createClass({
   onSubmitNewTask(event) {
     event.preventDefault();
 
-    const listId = this.props.list._id;
+    const listId = this.props.list.id;
     const input = React.findDOMNode(this.refs.newTaskInput);
     const taskText = input.value;
     if (! taskText) {
@@ -87,7 +87,7 @@ TodoListHeader = React.createClass({
       return;
     }
 
-    Meteor.call("/lists/addTask", this.props.list._id, taskText, (err, res) => {
+    Meteor.call("/lists/addTask", this.props.list.id, taskText, (err, res) => {
       if (err) {
         alert("Failed to add new task.");
         return;

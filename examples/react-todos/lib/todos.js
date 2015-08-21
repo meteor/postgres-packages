@@ -1,10 +1,5 @@
 Todos = new PG.Table('todos');
 
-// Stuff below here is server-only
-if (Meteor.isClient) {
-  return;
-}
-
 Meteor.methods({
   '/todos/delete': function (todoId) {
     Todos.delete().where({id: todoId}).run();

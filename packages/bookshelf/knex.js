@@ -527,7 +527,7 @@ _.extend(QueryCompiler.prototype, {
   update: function() {
     const table = this.single.table;
     const modifier = this.single.update;
-    const selector = this.where(this);
+    const {selector} = this.where(this);
 
     return {
       collection: table,
@@ -539,7 +539,7 @@ _.extend(QueryCompiler.prototype, {
 
   del: function () {
     const table = this.single.table;
-    const selector = this.where(this);
+    const {selector} = this.where(this);
 
     return {
       collection: table,
@@ -578,14 +578,18 @@ _.extend(QueryCompiler.prototype, {
     const incUnsigned = counter.amount;
     const incSigned = counter.symbol === "+" ? incUnsigned : -incUnsigned;
 
-    return {
+    const ret = {
       collection: this.single.table,
       method: 'update',
-      selector: this.where(this),
+      selector: this.where(this).selector,
       modifier: {
         $inc: {[counter.column]: incSigned}
       }
     };
+
+    console.log(ret);
+
+    return ret;
   },
 
   order: function () {
