@@ -330,11 +330,27 @@ _.extend(Builder.prototype, {
 
   // Increments a column's value by the specified amount.
   increment: function(column, amount) {
+    if (! _.isString(column)) {
+      throw new Error('Must provide string column name to increment');
+    }
+
+    if (isNaN(amount)) {
+      throw new Error('Must provide number amount to increment');
+    }
+
     return this._counter(column, amount);
   },
 
   // Decrements a column's value by the specified amount.
   decrement: function(column, amount) {
+    if (! _.isString(column)) {
+      throw new Error('Must provide string column name to decrement');
+    }
+
+    if (isNaN(amount)) {
+      throw new Error('Must provide number amount to decrement');
+    }
+
     return this._counter(column, amount, '-');
   },
 
@@ -558,7 +574,18 @@ _.extend(QueryCompiler.prototype, {
 
   // Compile the "counter".
   counter: function() {
-    throw new Error();
+    const counter = this.single.counter;
+    const incUnsigned = counter.amount;
+    const incSigned = counter.symbol === "+" ? incUnsigned : -incUnsigned;
+
+    return {
+      collection: this.single.table,
+      method: 'update',
+      selector: this.where(this),
+      modifier: {
+        $inc: {[counter.column]: incSigned}
+      }
+    };
   },
 
   order: function () {

@@ -16,13 +16,13 @@ Here are some methods from the Todos example app:
 // Defined in a file that is loaded both on client and server
 Meteor.methods({
   '/todos/delete': function (todoId) {
-    Todos.knex().delete().where({id: todoId}).run();
+    Todos.delete().where({id: todoId}).run();
   },
   '/todos/setChecked': function (todoId, checked) {
-    Todos.knex().update({checked: checked}).where({id: todoId}).run();
+    Todos.update({checked: checked}).where({id: todoId}).run();
   },
   '/todos/setText': function (todoId, newText) {
-    Todos.knex().update({text: newText}).where({id: todoId}).run();
+    Todos.update({text: newText}).where({id: todoId}).run();
   }
 });
 ```
@@ -40,7 +40,7 @@ In this case, we are operating on data that has an extra column on the client. W
 ```js
 Meteor.methods({
   '/lists/addTask': function (listId, newTaskText) {
-    Todos.knex().insert({
+    Todos.insert({
       list_id: listId,
       text: newTaskText,
       checked: false
@@ -50,7 +50,7 @@ Meteor.methods({
       // The imcomplete_count column only exists on the client, since it is
       // generated from a join/aggregate on the server. We need to update it
       // manually
-      Lists.knex().increment(incomplete_count, 1).run();
+      Lists.increment(incomplete_count, 1).run();
     }
   }
 });

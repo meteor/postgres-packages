@@ -12,12 +12,12 @@ If you want to publish data that includes aggregates or transformations, see the
 Meteor.publish("users-posts-and-their-comments", function() {
   const userId = this.userId;
 
-  const postsQuery = Posts.knex()
+  const postsQuery = Posts
     .innerJoin("users", "posts.user_id", "users.id")
     .select(["x", "y", "z"])
     .where({some: condition});
 
-  const commentsQuery = Comments.knex()
+  const commentsQuery = Comments
     .innerJoin("posts", "comments.post_id", "posts.id")
     .innerJoin("users", "posts.user_id", "users.id")
     .where({other: condition});
@@ -40,7 +40,7 @@ When you declare a table, you can also specify methods that will be attached to 
 class List extends PG.Model {
   todos() {
     // Partially built query that encodes the relation
-    return Todos.knex().where({list_id: this._id});
+    return Todos.where({list_id: this._id});
   }
 }
 
@@ -54,7 +54,7 @@ Now, you can call methods on the rows you retrieve to do simple relations:
 
 ```js
 // Get a list from the table
-const list = Lists.knex().where({ id: listId }).run()[0];
+const list = Lists.where({ id: listId }).run()[0];
 
 // Get the todo items from the list, sorted by timestamp
 const todos = list.todos().orderBy("created_at", "DESC").run(),

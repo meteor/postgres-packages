@@ -9,7 +9,7 @@ We have implemented a subset of the Knex query builder to work against Minimongo
 Lists = new PG.Table("lists");
 
 // Get the list with a specific ID
-Lists.knex().where({ id: listId }).run()[0]
+Lists.where({ id: listId }).run()[0]
 ```
 
 The above code will return the real row from the database if called on the server, or the client-side cached copy of the row if called from the client.

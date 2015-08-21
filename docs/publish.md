@@ -20,7 +20,7 @@ Meteor.publish('todos', function(listId) {
   check(listId, Match.Integer);
 
   // Build a query with Knex and return it
-  return Todos.knex()
+  return Todos
     .select("*")
     .from("todos")
     .where("list_id", listId);
@@ -79,7 +79,7 @@ Here is how you could write this query with Knex (it's a little ugly, I know):
 
 ```js
 Meteor.publish("publicLists", function () {
-  return Lists.knex()
+  return Lists
     .select("lists.*", PG.knex.raw("count(todos.id)::integer as incomplete_count"))
     .where({user_id: null})
     .leftJoin("todos", function () {
