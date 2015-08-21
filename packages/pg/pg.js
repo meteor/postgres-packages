@@ -41,15 +41,17 @@ PG.Query.prototype.observe = function (cbs) {
 PG.Query.prototype._publishCursor = function (sub) {
   var table = this.name;
 
+  var self = this;
+
   var observeHandle = this.observe({
     added: function (doc) {
-      sub.added(table, doc.id, doc);
+      sub.added(table, String(doc.id), doc);
     },
     changed: function (newDoc, oldDoc) {
-      sub.changed(table, newDoc.id, makeChangedFields(newDoc, oldDoc));
+      sub.changed(table, String(newDoc.id), makeChangedFields(newDoc, oldDoc));
     },
     removed: function (doc) {
-      sub.removed(table, doc.id);
+      sub.removed(table, String(doc.id));
     }
   });
 

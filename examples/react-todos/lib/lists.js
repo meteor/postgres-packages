@@ -1,6 +1,6 @@
 class List extends PG.Model {
   todos() {
-    return Todos.where({list_id: this._id});
+    return Todos.where({list_id: this.id});
   }
 }
 

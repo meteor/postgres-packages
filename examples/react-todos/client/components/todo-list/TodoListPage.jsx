@@ -17,7 +17,7 @@ TodoListPage = React.createClass({
 
     if (tasksSubHandle.ready()) {
       return {
-        tasks: list.todos().orderBy("created_at", "DESC").fetch(),
+        tasks: list && list.todos().orderBy("created_at", "DESC").fetch(),
         list: list,
         tasksLoading: false
       };
