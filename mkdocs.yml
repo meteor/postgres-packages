@@ -8,3 +8,4 @@ pages:
 - Writing to the database with methods: methods.md
 - Relational data: relations.md
 - Using transactions inside methods: transactions.md
+- Contribute: contribute.md
