@@ -41,7 +41,6 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       const removed = callbacks.removed || noop;
 
       const cb = (updates, qh) => {
-        console.log(updates, qh, queryHash);
         if (queryHash !== qh) return;
         updates.removed.forEach(v => removed(v));
         updates.changed.forEach((v) => changed(v[0], v[1]));
@@ -60,7 +59,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       this._setupSelect(query, params, pollValidators, handle);
 
       // seed initial
-      const update = this._processDiff({}, this.queries[queryHash].data);
+      const update = this._processDiff({}, {}, this.queries[queryHash].data);
       cb(update, queryHash);
 
       return handle;
@@ -278,19 +277,27 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
     const result = client.querySync(loadQuery('poll', {
       query: queryBuffer.query,
       // an extra param that we append in our wrapper: old hashes
-      hashParam: queryBuffer.params.length + 1
+      hashParam: queryBuffer.params.length + 1,
+      stringifiedHashesList: oldHashes.concat('dummy').map(s => '(\'' + s + '\')').join(', ')
     }), queryParams).rows;
 
     const newData = {};
+    const removedHashes = {};
     result.forEach((row) => {
+      if (row.removed_hash) {
+        if (row.removed_hash === 'dummy')
+          return;
+        removedHashes[row.removed_hash] = true;
+        return;
+      }
       if (! row.id)
         throw new Error('LiveQuery requires queries to return a unique non-null `id` column');
 
       newData[row.id] = row;
     });
 
-    const update = this._processDiff(queryBuffer.data, newData);
-    queryBuffer.data = newData;
+    const update = this._processDiff(queryBuffer.data, removedHashes, newData);
+    queryBuffer.data = update.newSnapshot;
 
     if (queryBuffer.status === 'active') {
       this.emit('update', update, queryHash);
@@ -302,16 +309,26 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
     }
   }
 
-  _processDiff(oldData, newData) {
+  _processDiff(oldData, removedHashes, newData) {
     const removed = [];
     const changed = [];
     const added = [];
 
+    const newSnapshot = _.clone(newData);
+
     Object.keys(oldData).forEach((id) => {
       const oldRow = oldData[id];
-      if (! newData[id])
-        removed.push(
-          filterHashProperties(oldRow));
+      if (! newData[id]) {
+        // this row is not updated or created in new poll
+        if (removedHashes[oldRow._hash]) {
+          // the row was explicitly removed
+          removed.push(
+            filterHashProperties(oldRow));
+        } else {
+          // it wasn't removed, just remained the same
+          newSnapshot[id] = oldRow;
+        }
+      }
     });
     Object.keys(newData).forEach((id) => {
       const newRow = newData[id];
@@ -327,9 +344,10 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
         added.push(
           filterHashProperties(newRow));
       }
+      newSnapshot[id] = newRow;
     });
 
-    return {added, changed, removed};
+    return {added, changed, removed, newSnapshot};
   }
 
   _scheduleQueueDrain() {
@@ -439,7 +457,7 @@ function loadQuery(name, kwargs) {
 
 function filterHashProperties(obj) {
   if (obj instanceof Object) {
-    return _.omit(obj, '_hash');
+    return _.omit(obj, '_hash', 'removed_hash');
   }
   throw new Error('bad call of filterHashProperties ' + JSON.stringify(obj));
 }

@@ -45,12 +45,22 @@ Package.onUse(function(api) {
 
   api.addFiles([
     'collection-client.js'
-  ], 'client')
+  ], 'client');
 
   // Needs to be loaded last, uses setup from client or server
   api.addFiles([
     'collection.js'
   ]);
+
+  // observe driver
+  api.use('underscore', 'server');
+  api.addFiles(['observe-driver/polling-driver.js'], 'server');
+  api.addFiles([
+    'observe-driver/setup-triggers.sql',
+    'observe-driver/poll-n-diff.sql',
+    'observe-driver/poll.sql'
+  ], 'server', {isAsset: true});
+
 
   // EXPORT
   api.export('PG');
@@ -63,13 +73,5 @@ Package.onTest(function(api) {
 
   api.use('ecmascript');
 
-  api.use('random');
-  api.use('underscore');
-  api.addFiles(['observe-driver/polling-driver.js'], 'server');
   api.addFiles(['observe-driver/tests.js'], 'server');
-  api.addFiles([
-    'observe-driver/setup-triggers.sql',
-    'observe-driver/poll-n-diff.sql',
-    'observe-driver/poll.sql'
-  ], 'server', {isAsset: true});
 });
