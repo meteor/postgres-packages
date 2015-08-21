@@ -23,3 +23,7 @@ Read about how to use relations on the client here: [Relations](relations.md)
 Currently, calling the Knex query builder on the client actually generates Minimongo queries, and the client-side data cache is Minimongo under the hood. This has some desirable properties - it will be compatible with any UI packages that rely on Minimongo or Minimongo cursors to function!
 
 Currently, it's not easy to extract a cursor, but we'll be working on that in the future.
+
+## _id field
+
+Rows you extract from the client-side cache will, in addition to all of the fields you expect, have an extra `_id` field which is a stringified version of the row's `id`. This is due to an internal implementation detail in DDP that requires every document to have a string `_id`.
