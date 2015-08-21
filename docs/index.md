@@ -15,7 +15,7 @@ This is the simplest possible implementation of using a SQL database, specifical
 
 ## Running the react-todos example app
 
-First, [install PostgreSQL](http://localhost:8000/migrations/#installing-and-running-postgresql). Then, run the commands below:
+First, [install PostgreSQL](migrations.md#installing-and-running-postgresql). Then, run the commands below:
 
 ```bash
 # Clone this repository
