@@ -85,13 +85,13 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       this.queries[queryHash].status !== 'stopped') {
       // dedup
       const queryBuffer = this.queries[queryHash];
-      queryBuffer.handlers.push(handle);
+      queryBuffer.handles.push(handle);
 
       // XXX pollValidators are dropped in this case? What if they
       // were different from the current ones?
 
       // wait until it is populated
-      if (queryBuffer.status === 'active') {
+      if (queryBuffer.status === 'initializing') {
         queryBuffer.initializedFuture.wait();
       }
       return;
@@ -103,7 +103,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       query,
       params,
       pollValidators,
-      handers: [handle],
+      handles: [handle],
       // where we store the working set
       data: {},
       // until initialized, deduplicated queries should await
@@ -149,7 +149,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
   _stopSelect(handle) {
     this.removeListener('update', handle._cb);
     const queryBuffer = this.queries[handle._queryHash];
-    const pos = queryBuffer.handlers.indexOf(handle);
+    const pos = queryBuffer.handles.indexOf(handle);
     if (pos > -1) {
       queryBuffer.handles.splice(pos, 1);
     }
