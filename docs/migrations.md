@@ -4,7 +4,7 @@ With MongoDB, Meteor automatically sets up and runs the database for you, and yo
 
 ## Installing and running PostgreSQL
 
-Currently, we only have directions for Mac OS. Please add more for other systems!
+Currently, we only have directions for Mac OS and Windows. Please add more for other systems!
 
 ### On Mac
 
@@ -28,7 +28,7 @@ postgres -D /usr/local/var/postgres
 
 ### On Windows
 
-The easiest way to install PostgreSQL on Windows is with the installer from [EnterpriseDB](http://www.enterprisedb.com/products-services-training/pgdownload#windows).
+The officially recommended installation method for PostgreSQL on Windows is with the installer from [EnterpriseDB](http://www.enterprisedb.com/products-services-training/pgdownload#windows).
 
 The installer automatically initializes the data directory and registers PostgreSQL as a Windows Service.
 
