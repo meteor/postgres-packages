@@ -26,6 +26,14 @@ Running the database:
 postgres -D /usr/local/var/postgres
 ```
 
+### On Windows
+
+The easiest way to install PostgreSQL on Windows is with the installer from [EnterpriseDB](http://www.enterprisedb.com/products-services-training/pgdownload#windows).
+
+The installer automatically initializes the data directory and registers PostgreSQL as a Windows Service.
+
+You can also install the graphical management interface PGAdmin III using the same installer.
+
 ## Creating and deleting databases
 
 You will want to create a new database for each new app. Do this with the `createdb` command:
