@@ -4,7 +4,7 @@ With MongoDB, Meteor automatically sets up and runs the database for you, and yo
 
 ## Installing and running PostgreSQL
 
-Currently, we only have directions for Mac OS and Windows. Please add more for other systems!
+Currently, we only have directions for Mac OS, Windows and Ubuntu. Please add more for other systems!
 
 ### On Mac
 
@@ -33,6 +33,24 @@ The officially recommended installation method for PostgreSQL on Windows is with
 The installer automatically initializes the data directory and registers PostgreSQL as a Windows Service.
 
 You can also install the graphical management interface PGAdmin III using the same installer.
+
+### On Ubuntu (14.04)
+
+Make sure you're up to date:
+
+```sh
+sudo apt-get update
+```
+
+Install PostgreSQL (at the time of writing this will install Postgres v9.3):
+
+```sh
+sudo apt-get install postgresql
+```
+
+This will initialize Postgres and start the required daemons.  Note that you may use `sudo service postgresql <command>` to manage the
+daemons, where <command> is one of `start`, `stop`, `restart`, `status`.
+
 
 ## Creating and deleting databases
 
