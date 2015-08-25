@@ -42,14 +42,14 @@ Make sure you're up to date:
 sudo apt-get update
 ```
 
-Install PostgreSQL (at the time of writing this will install Postgres v9.3):
+Install PostgreSQL (at the time of writing this will install v9.3):
 
 ```sh
 sudo apt-get install postgresql
 ```
 
 This will initialize Postgres and start the required daemons.  Note that you may use `sudo service postgresql <command>` to manage the
-daemons, where <command> is one of `start`, `stop`, `restart`, `status`.
+daemons, where `<command>` is one of `start`, `stop`, `restart`, `status`.
 
 
 ## Creating and deleting databases
