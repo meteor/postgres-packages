@@ -5,7 +5,7 @@ We expect that most people will want to write queries using a JavaScript query b
 1. It can work on the server and the client - our [client-side cache](client.md) doesn't know how to run raw SQL
 2. You don't need to write `SELECT` and the name of the table every time
 3. You can get syntax highlighting and more structure to your queries
-4. You can use the chaning syntax to create partial queries, then pass them around and add more clauses as you go
+4. You can use the chaining syntax to create partial queries, then pass them around and add more clauses as you go
 
 ## Defining a Table
 
