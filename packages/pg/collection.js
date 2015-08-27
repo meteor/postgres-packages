@@ -35,7 +35,14 @@ PG.Table = class Table {
     } else {
       const exists = PG.await(PG.knex.schema.hasTable(tableName));
 
-      if (!exists) {
+      if (exists) {
+        // autopublish (options._preventAutopublish for possible future use)
+        if (Package.autopublish && !options._preventAutopublish) {
+          Meteor.publish(null, function() {
+            return PG.knex(tableName);
+          }, {is_auto: true});
+        }
+      } else {
         throw new Error(`Table '${tableName}' doesn't exist. Please create it in a migration.`);
       }
     }
