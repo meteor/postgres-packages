@@ -38,9 +38,11 @@ PG.Table = class Table {
       if (exists) {
         // autopublish (options._preventAutopublish for possible future use)
         if (Package.autopublish && !options._preventAutopublish) {
-          Meteor.publish(null, function() {
+          Meteor.publish(null, () => {
             return PG.knex(tableName);
-          }, {is_auto: true});
+          }, {
+            is_auto: true
+          });
         }
       } else {
         throw new Error(`Table '${tableName}' doesn't exist. Please create it in a migration.`);
