@@ -39,7 +39,7 @@ PG.Table = class Table {
         // autopublish (options._preventAutopublish for possible future use)
         if (Package.autopublish && !options._preventAutopublish) {
           Meteor.publish(null, () => {
-            return PG.knex(tableName);
+            return this.knex();
           }, {
             is_auto: true
           });
