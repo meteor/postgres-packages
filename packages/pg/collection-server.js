@@ -65,7 +65,7 @@ QBProto.fetch = function fetch() {
   if (this._method === 'select') {
     return this.run();
   } else {
-    throw new Error("Can only call fetch on select queries.");
+    throw new Error("Can only call fetch/fetchOne/fetchValue on select queries.");
   }
 }
 

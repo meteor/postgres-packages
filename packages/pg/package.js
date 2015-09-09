@@ -40,12 +40,12 @@ Package.onUse(function(api) {
   // observe driver
   api.use(['underscore', 'ddp-server'], 'server');
   api.addFiles(['observe-driver/polling-driver.js'], 'server');
-  api.addFiles([
+
+  api.addAssets([
     'observe-driver/setup-triggers.sql',
     'observe-driver/poll-n-diff.sql',
     'observe-driver/poll.sql'
-  ], 'server', {isAsset: true});
-
+  ], 'server');
 
   api.addFiles([
     'pg.js',
