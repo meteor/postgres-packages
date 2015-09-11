@@ -4,11 +4,6 @@ Package.describe({
 });
 
 Package.onUse(function (api) {
-  api.use([
-    'accounts-base-pg-driver',
-    'simple:pg'
-  ], ['server']);
-
   api.use('underscore', ['client', 'server']);
   api.use('ddp-rate-limiter');
   api.use('localstorage', 'client');

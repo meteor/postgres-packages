@@ -29,6 +29,20 @@ AccountsServer = function AccountsServer(server) {
     loggedInUser: ['profile', 'username', 'emails'],
     otherUsers: ['profile', 'username']
   };
+  
+  
+  if (!Meteor.AccountsDBClient) {
+    // TODO fallback to Mongo
+    throw new Error("Mongo accounts-password not plugged in yet");
+  }
+  else {
+    console.log('Using pluggable accounts-password ' + Meteor.AccountsDBClient.name );
+    this.dbClient = new Meteor.AccountsDBClient();
+    // this.migrations = this.dbClient.migrations; //if needed
+  }
+    
+  
+    
   this._initServerPublications();
 
   // connectionId -> {connection, loginToken}
@@ -53,8 +67,7 @@ AccountsServer = function AccountsServer(server) {
     defaultValidateNewUserHook.bind(this)
   ];
 
-  this.dbClient = new AccountsDBClientPG();
-  this.migrations = AccountsDBClientPG.migrations;
+  
 
   this._deleteSavedTokensForAllUsersOnStartup();
 
@@ -379,7 +392,7 @@ Ap._reportLoginFailure = function (
   };
 
   if (result.userId) {
-    attempt.user = this.users.findOne(result.userId);
+    attempt.user = this.dbClient.getUserById(result.userId);
   }
 
   this._validateLogin(methodInvocation.connection, attempt);
@@ -609,11 +622,8 @@ Ap._initServerMethods = function () {
       throw new Meteor.Error("You are not logged in.");
     }
     var currentToken = accounts._getLoginToken(self.connection.id);
-    accounts.users.update(self.userId, {
-      $pull: {
-        "services.resume.loginTokens": { hashedToken: { $ne: currentToken } }
-      }
-    });
+    accounts.dbClient.removeOtherHashedLoginTokens(
+                        self.userId,currentToken);
   };
 
   // Allow a one-time configuration for a login service. Modifications
@@ -675,64 +685,19 @@ Ap._initServerPublications = function () {
       return null;
     }
 
-    const userId = parseInt(this.userId, 10);
+    //const userId = parseInt(this.userId, 10); PG specific
+    const userId = this.userId;
 
     const subscription = this;
 
     var user = accounts.dbClient.getUserById(userId);
     subscription.added("users", subscription.userId, user);
-
-    const obUser = new PG.Query(
-      PG.knex
-        .select("*")
-        .from("users")
-        .where("id", userId)
-        .toString(),
-      'things').observe({
-        added: Meteor.bindEnvironment(userChanged),
-        changed: Meteor.bindEnvironment(userChanged),
-        removed: Meteor.bindEnvironment(userRemoved)
-      });
-
-    const obUserServices = new PG.Query(
-      PG.knex
-        .select("*")
-        .from("users_services")
-        .where("user_id", userId)
-        .toString(),
-      'things').observe({
-        added: Meteor.bindEnvironment(userChanged),
-        changed: Meteor.bindEnvironment(userChanged),
-        removed: Meteor.bindEnvironment(userChanged)
-      });
-
-    const obUserEmails = new PG.Query(
-      PG.knex
-        .select("*")
-        .from("users_emails")
-        .where("user_id", userId)
-        .toString(),
-      'things').observe({
-        added: Meteor.bindEnvironment(userChanged),
-        changed: Meteor.bindEnvironment(userChanged),
-        removed: Meteor.bindEnvironment(userChanged)
-      });
-
-    function userChanged(newDoc) {
-      var user = accounts.dbClient.getUserById(userId);
-      subscription.added("users", subscription.userId, user);
-    }
-
-
-
-    function userRemoved() {
-      throw new Error("WTF")
-    }
+    
+    accounts.dbClient.setupObserves(userId,subscription );
+    
 
     subscription.onStop(function () {
-      obUser.stop();
-      obUserServices.stop();
-      obUserEmails.stop();
+      accounts.dbClient.stopObserves();
       userAdded = false;
     });
   }, {is_auto: true});
@@ -855,11 +820,7 @@ Ap._insertLoginToken = function (userId, stampedToken, query) {
 
 
 Ap._clearAllLoginTokens = function (userId) {
-  this.users.update(userId, {
-    $set: {
-      'services.resume.loginTokens': []
-    }
-  });
+  this.dbClient.deleteAllResumeTokens(userId);
 };
 
 // test hook
@@ -1083,21 +1044,8 @@ Ap._expireTokens = function (oldestValidDate, userId) {
 
   // Backwards compatible with older versions of meteor that stored login token
   // timestamps as numbers.
-  this.users.update(_.extend(userFilter, {
-    $or: [
-      { "services.resume.loginTokens.when": { $lt: oldestValidDate } },
-      { "services.resume.loginTokens.when": { $lt: +oldestValidDate } }
-    ]
-  }), {
-    $pull: {
-      "services.resume.loginTokens": {
-        $or: [
-          { when: { $lt: oldestValidDate } },
-          { when: { $lt: +oldestValidDate } }
-        ]
-      }
-    }
-  }, { multi: true });
+  this.dbClient.expireResumeTokens(userId,oldestValidDate);
+  
   // The observe on Meteor.users will take care of closing connections for
   // expired tokens.
 };
@@ -1413,15 +1361,7 @@ function setupUsersCollection(users) {
 
 Ap._deleteSavedTokensForUser = function (userId, tokensToDelete) {
   if (tokensToDelete) {
-    this.users.update(userId, {
-      $unset: {
-        "services.resume.haveLoginTokensToDelete": 1,
-        "services.resume.loginTokensToDelete": 1
-      },
-      $pullAll: {
-        "services.resume.loginTokens": tokensToDelete
-      }
-    });
+    this.dbClient.removeHashedLoginToken(userId,tokensToDelete);
   }
 };
 

@@ -95,6 +95,40 @@ AccountsDBClientPG = class AccountsDBClientPG {
       value: token
     }).delete());
   }
+  
+  // remove all resume.loginTokens tokens of a user except the 
+  // specified token
+  removeOtherHashedLoginTokens(userId, token) {
+    PG.await(PG.knex("users_services").where({
+      user_id: userId,
+      service_name: "resume",
+      key: "loginTokens",
+      value: { $ne: token}
+    }).delete());
+  }
+  
+  //expire resume.loginTokens tokens by timestamp for user
+  expireResumeTokens(userId,oldestValidDate) {
+    PG.await(PG.knex("users_services").where({
+      user_id: userId,
+      service_name: "resume",
+      key: "loginTokens"}
+      ).where(function() {
+       this.where('created_at', '<' , new Date(oldestValidDate))
+       .orWhere('created_at', '<' ,  new Date(+oldestValidDate))
+     }).delete());
+  }
+  
+  //update password and remove other login tokens
+  updatePassword(userId, newHashedPwd, currentResumeLoginToken) {
+    PG.await(PG.knex("users_services").where({
+      user_id: userId,
+      service_name: "password",
+      key: "bcrypt"
+    }).update({value: newHashedPwd}));
+    
+    this.removeOtherHashedLoginTokens(userId,currentResumeLoginToken);
+  }
 
   // XXX should be in facebook package or something
   _getServiceData(userId) {
@@ -112,10 +146,19 @@ AccountsDBClientPG = class AccountsDBClientPG {
     return serviceData;
   }
 
-  deleteAllResumeTokens() {
-    PG.await(PG.knex("users_services").where({
-      service_name: "resume.loginTokens"
-    }).delete());
+  deleteAllResumeTokens(userId) {
+    var selector;
+    if (userId) {
+      selector = {user_id: userId}
+    }
+    
+    selector = _.extend( {
+      service_name: 'resume',
+      key: 'loginTokens'
+      },selector);
+    PG.await(PG.knex("users_services").where(
+        selector
+    ).delete());
   }
 
   _getUserIdByService(serviceName, serviceKey, serviceValue) {
@@ -243,7 +286,70 @@ AccountsDBClientPG = class AccountsDBClientPG {
   deleteUser(userId) {
     PG.await(PG.knex("users").where({id: userId}).delete());
   }
+  
+  setupObserves(userId, subscription) {
+    self = this;
+    
+
+    if (_.isString(userId)) {
+      userId = parseInt(userId, 10);
+    }
+    
+    this.obUser = new PG.Query(
+        PG.knex
+          .select("*")
+          .from("users")
+          .where("id", userId)
+          .toString(),
+        'things').observe({
+          added: Meteor.bindEnvironment(userChanged),
+          changed: Meteor.bindEnvironment(userChanged),
+          removed: Meteor.bindEnvironment(userRemoved)
+        });
+
+      this.obUserServices = new PG.Query(
+        PG.knex
+          .select("*")
+          .from("users_services")
+          .where("user_id", userId)
+          .toString(),
+        'things').observe({
+          added: Meteor.bindEnvironment(userChanged),
+          changed: Meteor.bindEnvironment(userChanged),
+          removed: Meteor.bindEnvironment(userChanged)
+        });
+
+      this.obUserEmails = new PG.Query(
+        PG.knex
+          .select("*")
+          .from("users_emails")
+          .where("user_id", userId)
+          .toString(),
+        'things').observe({
+          added: Meteor.bindEnvironment(userChanged),
+          changed: Meteor.bindEnvironment(userChanged),
+          removed: Meteor.bindEnvironment(userChanged)
+        });
+
+      function userChanged(newDoc) {
+        var user = self.getUserById(userId);
+        subscription.added("users", userId, user);
+      }
+      
+      function userRemoved() {
+        throw new Error("WTF")
+      }
+    
+  }
+  
+  stopObserves() {
+    this.obUser.stop();
+    this.obUserServices.stop();
+    this.obUserEmails.stop();
+  }
 }
+
+Meteor.AccountsDBClient =  AccountsDBClientPG;
 
 // AccountsDBClientPG.migrations = {};
 
