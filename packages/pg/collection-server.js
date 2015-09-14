@@ -24,6 +24,14 @@ QBProto._publishCursor = function (sub) {
   return new PG.Query(queryStr, tableName)._publishCursor(sub);
 };
 
+QBProto.observe = function (...args) {
+  const queryStr = this.toString();
+  const tableName = this._getCollectionName();
+  const pgQuery = new PG.Query(queryStr, tableName);
+  return pgQuery.observe.apply(pgQuery, args);
+};
+
+
 const oldRaw = PG.knex.raw;
 PG.knex.raw = function () {
   const ret = oldRaw.apply(PG.knex, arguments);
