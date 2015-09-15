@@ -64,17 +64,18 @@ QBProto.fetchOne = function fetchOne() {
 // Addresses https://github.com/meteor/postgres-packages/issues/9
 QBProto.fetchValue = function fetchValue(column) {
   const row = QBProto.fetch.call(this)[0];
-  if (column) {
+  if ('undefined' === typeof column) {
+    let keys = Object.keys(row);
+    if (keys.length === 1) {
+      return row[keys[0]];
+    } else {
+      throw new Error("fetchValue(): query returned more than one column.");
+    }
+  } else if ('string' === typeof column) {
     if ('undefined' === typeof row[column]) {
       throw new Error("fetchValue(column): column '" + column + "' does not exist.");
     } else {
       return row[column];
-    }
-  } else if ('string' === typeof column) {
-    if (row.length === 1) {
-      return row[Object.keys(row)[0]];
-    } else {
-      throw new Error("fetchValue(): query returned more than one column.");
     }
   } else {
     throw new Error("fetchValue(column): column must be a string.");

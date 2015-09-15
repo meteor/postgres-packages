@@ -67,7 +67,8 @@ Package.onUse(function(api) {
 });
 
 Package.onTest(function(api) {
-  api.use(['tinytest','underscore','promise','simple:pg','ecmascript']);
+  api.use(['tinytest','promise','simple:pg','ecmascript']);
+  api.imply('underscore');
   api.addFiles('pg-tests.js');
   api.addFiles('pg-server-tests.js', 'server');
 
