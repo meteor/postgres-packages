@@ -67,11 +67,9 @@ Package.onUse(function(api) {
 });
 
 Package.onTest(function(api) {
-  api.use('tinytest');
-  api.use('simple:pg');
+  api.use(['tinytest','underscore','promise','simple:pg','ecmascript']);
   api.addFiles('pg-tests.js');
-
-  api.use('ecmascript');
+  api.addFiles('pg-server-tests.js', 'server');
 
   api.use(['ddp-server'], 'server');
   api.addFiles(['observe-driver/tests.js'], 'server');
