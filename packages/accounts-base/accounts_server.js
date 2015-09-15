@@ -98,7 +98,8 @@ Ap.userId = function () {
 
   // XXX DDP assumes user IDs are strings
   if (currentInvocation.userId) {
-    return parseInt(currentInvocation.userId, 10);
+    return this.dbClient.formatUserIdToDbType(
+                            currentInvocation.userId);
   } else {
     return currentInvocation.userId;
   }
@@ -279,7 +280,7 @@ Ap._loginUser = function (methodInvocation, userId, stampedLoginToken) {
   });
 
   // DDP assumes user ids are strings
-  methodInvocation.setUserId(userId + "");
+  methodInvocation.setUserId(this.dbClient.formatUserIdToDdpType(userId));
 
   return {
     id: userId,

@@ -5,6 +5,18 @@ AccountsDBClientPG = class AccountsDBClientPG {
     this.Services = new PG.Table("users_services");
   }
 
+  // format the userID to the datatype used by storage backend
+  // e.g. postgres is using userId as an integer
+  formatUserIdToDbType(userId) {
+    return parseInt(currentInvocation.userId, 10);
+  }
+  
+  //DDP assumes user ids are strings
+  formatUserIdToDdpType(userId) {
+    return userId + "";
+  }
+  
+  
   insertUser() {
     const result = PG.await(this.Users.knex().insert({}).returning("id"));
     return result[0];
