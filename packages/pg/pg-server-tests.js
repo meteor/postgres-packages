@@ -1,23 +1,23 @@
-Table = null; //                                          All being well we'll overwrite this later
+let Table = null; //                                      All being well we'll overwrite this later
 const tablename = 'testing'; //                           Pick a sensible (?) table name
 
 Tinytest.add('pg - schema builder - create testing table', (test) => {
-    let dropTable = () => { //                            Set up a promised drop table
+    function dropTable() { //                             Set up a promised drop table
     let promise = PG.knex.schema.dropTableIfExists(tablename);
-    return Promise.resolve(promise).await();
+    return Promise.await(promise);
   };
 
-  let createTable = () => { //                          Set up a promised create table
-    let promise = PG.knex.schema.createTable(tablename, function(table) {
+  function createTable() { //                             Set up a promised create table
+    let promise = PG.knex.schema.createTable(tablename, (table) => {
       table.increments();
       table.string('name');
     });
-    return Promise.resolve(promise).await();
+    return Promise.await(promise);
   };
 
-  dropTable(); //                                       Drop the table (if it exists)
-  createTable(); //                                     Create the table
-  Table = new PG.Table('testing');
+  dropTable(); //                                         Drop the table (if it exists)
+  createTable(); //                                       Create the table
+  Table = new PG.Table('testing'); //                     Ready to test pg package functionality
 });
 
 
