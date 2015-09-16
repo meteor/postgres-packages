@@ -22,6 +22,7 @@ Tinytest.add('pg - schema builder - create testing table', (test) => {
 
 
 Tinytest.add('pg - query builder - add rows to testing table', (test) => {
+  let row;
   Table.delete().run(); //                                Truncate table (only works on the server)
 
   Table.insert({id:1, name: 'Bob'}).run(); //             Add 'Bob' as id 1
@@ -36,30 +37,30 @@ Tinytest.add('pg - query builder - add rows to testing table', (test) => {
 });
 
 Tinytest.add('pg - query builder - check correct row count', (test) => {
-  let n = +Table.count('* AS n').fetch()[0].n;
+  const n = +Table.count('* AS n').fetch()[0].n;
   test.equal(n, 2); //                                    We inserted two rows, so we should have two rows
 });
 
 Tinytest.add('pg - query builder - check update works', (test) => {
   Table.update({name: 'Ted'}).where({id: 1}).run(); //    Change Bob to Ted
-  bob = Table.where({id: 1}).fetch()[0];
+  const bob = Table.where({id: 1}).fetch()[0];
   test.equal(bob.name, 'Ted'); //                         Bob should now be Ted
 
   Table.update({name: 'Alice'}).where({id: 2}).run(); //  Change Carol to Alice
-  carol = Table.where({id: 2}).fetch()[0];
+  const carol = Table.where({id: 2}).fetch()[0];
   test.equal(carol.name, 'Alice'); //                     Carol should now be Alice
 });
 
 Tinytest.add('pg - query builder - check fetchOne works', (test) => {
-  let row = Table.fetchOne(); //                          Grab a row
+  const row = Table.fetchOne(); //                        Grab a row
   test.isTrue(row instanceof Object); //                  We should have an object
   test.isTrue('id' in row); //                            with an id column
   test.isTrue('name' in row); //                          and a name column
 });
 
 Tinytest.add('pg - query builder - check fetchValue works', (test) => {
-  let n = +Table.count('*').fetchValue(); //              Start with a quick count(*)
+  const n = +Table.count('*').fetchValue(); //            Start with a quick count(*)
   test.equal(n, 2); //                                    We should have a count of 2
-  let name = Table.where({id: 2}).fetchValue('name'); //  Get Alice
+  const name = Table.where({id: 2}).fetchValue('name'); //Get Alice
   test.equal(name, 'Alice');
 });
