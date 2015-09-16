@@ -2,7 +2,7 @@ let Table = null; //                                      All being well we'll o
 const tablename = 'testing'; //                           Pick a sensible (?) table name
 
 Tinytest.add('pg - schema builder - create testing table', (test) => {
-    function dropTable() { //                             Set up a promised drop table
+  function dropTable() { //                               Set up a promised drop table
     let promise = PG.knex.schema.dropTableIfExists(tablename);
     return Promise.await(promise);
   };
