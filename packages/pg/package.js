@@ -1,6 +1,6 @@
 Package.describe({
   name: 'simple:pg',
-  version: '0.0.1',
+  version: '0.0.2',
   summary: 'XXX it almost does what you would expect',
   documentation: null
 });
@@ -40,12 +40,12 @@ Package.onUse(function(api) {
   // observe driver
   api.use(['underscore', 'ddp-server'], 'server');
   api.addFiles(['observe-driver/polling-driver.js'], 'server');
-  api.addFiles([
+
+  api.addAssets([
     'observe-driver/setup-triggers.sql',
     'observe-driver/poll-n-diff.sql',
     'observe-driver/poll.sql'
-  ], 'server', {isAsset: true});
-
+  ], 'server');
 
   api.addFiles([
     'pg.js',
@@ -67,11 +67,9 @@ Package.onUse(function(api) {
 });
 
 Package.onTest(function(api) {
-  api.use('tinytest');
-  api.use('simple:pg');
+  api.use(['tinytest', 'promise', 'simple:pg', 'ecmascript']);
   api.addFiles('pg-tests.js');
-
-  api.use('ecmascript');
+  api.addFiles('pg-server-tests.js', 'server');
 
   api.use(['ddp-server'], 'server');
   api.addFiles(['observe-driver/tests.js'], 'server');

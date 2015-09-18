@@ -56,6 +56,40 @@ const QBProto = Meteor.isClient ?
   Knex.QueryBuilder.prototype :
   Knex.Client.prototype.QueryBuilder.prototype;
 
+// Addresses https://github.com/meteor/postgres-packages/issues/9
+// Fetches the first row of a select query.
+QBProto.fetchOne = function fetchOne() {
+  const rows = QBProto.fetch.call(this);
+  if (rows.length === 0) {
+    throw new Error("fetchOne/fetchValue: query returned no rows");
+  } else {
+    return rows[0];
+  }
+};
+
+// Addresses https://github.com/meteor/postgres-packages/issues/9
+// If one column is returned by the query fetchValue() gets it.
+// If more than one column is returned, use fetchValue(columnName) to get it.
+QBProto.fetchValue = function fetchValue(column) {
+  const row = QBProto.fetchOne.call(this);
+  if (_.isUndefined(column)) { //                         If no column was requested ...
+    const keys = Object.keys(row);
+    if (keys.length === 1) { //                           we only expect one in the response.
+      return row[keys[0]];
+    } else {
+      throw new Error("fetchValue(): query returned more than one column.");
+    }
+  } else if (_.isString(column)) { //                     If a column was requested ...
+    if (_.isUndefined(row[column])) { //                  we expect it to be there
+      throw new Error("fetchValue(column): column '" + column + "' does not exist.");
+    } else {
+      return row[column]; //                              and we return it if it is.
+    }
+  } else {
+    throw new Error("fetchValue(column): column must be a string.");
+  }
+};
+
 // Proxy all query builder methods; so when you type MyTable.select() it does
 // MyTable.knex().select()
 const methods = Object.getOwnPropertyNames(QBProto);
