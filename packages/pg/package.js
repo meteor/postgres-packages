@@ -41,11 +41,19 @@ Package.onUse(function(api) {
   api.use(['underscore', 'ddp-server'], 'server');
   api.addFiles(['observe-driver/polling-driver.js'], 'server');
 
-  api.addAssets([
-    'observe-driver/setup-triggers.sql',
-    'observe-driver/poll-n-diff.sql',
-    'observe-driver/poll.sql'
-  ], 'server');
+  if (api.addAssets) {
+    api.addAssets([
+      'observe-driver/setup-triggers.sql',
+      'observe-driver/poll-n-diff.sql',
+      'observe-driver/poll.sql'
+    ], 'server');
+  } else {
+    api.addFiles([
+      'observe-driver/setup-triggers.sql',
+      'observe-driver/poll-n-diff.sql',
+      'observe-driver/poll.sql'
+    ], 'server', { isAsset: true });
+  }
 
   api.addFiles([
     'pg.js',
