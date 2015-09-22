@@ -11,7 +11,7 @@ Npm.depends({
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom('1.2.0.0');
+  api.versionsFrom('1.2');
 
   // PACKAGE DEPENDENCIES
   api.use([
