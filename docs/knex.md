@@ -53,9 +53,82 @@ console.log(ids);
 
 ## Summary of additions to Knex
 
-2. The `run` and `fetch` methods are new. They always run synchronously using Fibers on the server. (The default Knex API uses promises)
-3. On the client, `run` and `fetch` generate Minimongo queries under the hood and run them synchronously.
-3. We have implemented all relevant Mongo cursor methods, so you can pass around Knex queries just like you would a cursor. This means that if you are using Blaze to render your views, you can have your helper just return the cursor without calling `run` or `fetch`.
+### run() and fetch()
+
+The `run` and `fetch` methods are new. They always run synchronously using Fibers on the server. (The default Knex API uses promises).
+
+On the client, `run` and `fetch` generate Minimongo queries under the hood and run them synchronously.
+
+We have implemented all relevant Mongo cursor methods, so you can pass around Knex queries just like you would a cursor. This means that if you are using Blaze to render your views, you can have your helper just return the cursor without calling `run` or `fetch`:
+
+    Template.myTemplate.helpers({
+      states: function() {
+        return States.select('state', 'capital', 'abbr').orderBy('state', 'desc');
+      }
+    });
+
+Then, in your template:
+
+    <template name="myTemplate">
+      <ul>
+      {{#each states}}
+        <div>({{abbr}}) - {{state}} - {{capital}}</div>
+      {{/each}}
+      </ul>
+    </template>
+
+### fetchOne()
+
+`fetchOne()` fetches the first row of a query:
+
+    States.select('state', 'capital', 'abbr').orderBy('state', 'desc').fetch();
+
+(Equivalent to `SELECT state, capital, abbr FROM states ORDER BY state DESC`) which
+returns:
+
+    [
+      ['Wyoming', 'Cheyenne', 'WY'],
+      ['Wisconsin', 'Madison', 'WI'],
+      ['West Virginia', 'Charleston', 'WV'],
+      ['Washington', 'Olympia', 'WA'],
+      ...
+    ]
+
+Then, `States.select('state', 'capital', 'abbr').orderBy('state', 'desc').fetchOne();`
+
+returns `['Wyoming', 'Cheyenne', 'WY']`
+
+#### fetchOne Exceptions
+
+    "Can only call fetch/fetchOne/fetchValue on select queries."
+    "fetchOne/fetchValue: query returned no rows"
+
+### fetchValue([column])
+
+`fetchValue(column)` returns the value of the specified column of a `fetchOne()`, so based on the `fetchOne()`
+example, above:
+
+    States.select('state', 'capital', 'abbr').orderBy('state', 'desc').fetchValue('abbr');
+
+returns `'WY'`.
+
+`fetchValue()` may be used to get the value of a query which returns a single, possibly "column-less" result:
+
+    States.count('*').fetchValue();
+
+returns `'50'` (note that `count()` in Postgres returns a BIGINT, which is cast to a string to ensure precision).
+If your counts lie in the representable range for integers in Javascript (integers with an absolute value below
+9007199254740993), you can cast these as numbers:
+
+    const numStates = +States.count('*').fetchValue(); // numStates = 50
+
+#### fetchValue Exceptions
+
+    "Can only call fetch/fetchOne/fetchValue on select queries."
+    "fetchOne/fetchValue: query returned no rows"
+    "fetchValue(): query returned more than one column."
+    "fetchValue(column): column 'xxx' does not exist."
+    "fetchValue(column): column must be a string."
 
 ## Knex docs
 
