@@ -87,16 +87,16 @@ Then, in your template:
 returns:
 
     [
-      ['Wyoming', 'Cheyenne', 'WY'],
-      ['Wisconsin', 'Madison', 'WI'],
-      ['West Virginia', 'Charleston', 'WV'],
-      ['Washington', 'Olympia', 'WA'],
+      {state: 'Wyoming', capital: 'Cheyenne', abbr: 'WY'},
+      {state: 'Wisconsin', capital: 'Madison', abbr: 'WI'},
+      {state: 'West Virginia', capital: 'Charleston', abbr: 'WV'},
+      {state: 'Washington', capital: 'Olympia', abbr: 'WA'},
       ...
     ]
 
 Then, `States.select('state', 'capital', 'abbr').orderBy('state', 'desc').fetchOne();`
 
-returns `['Wyoming', 'Cheyenne', 'WY']`
+returns `{state: 'Wyoming', capital: 'Cheyenne', abbr: 'WY'}`
 
 #### fetchOne Exceptions
 
