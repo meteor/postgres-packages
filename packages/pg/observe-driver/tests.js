@@ -4,7 +4,7 @@ const connectionUrl = process.env.POSTGRES_URL || 'postgres://127.0.0.1/postgres
 
 function runInFence(f) {
   if (Meteor.isClient) {
-    throw new Error;
+    throw new Error(`PG: fence not in client`, `client code cannot run in a fence`);
   }
 
   const fence = new DDPServer._WriteFence;
