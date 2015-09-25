@@ -100,8 +100,14 @@ returns `{state: 'Wyoming', capital: 'Cheyenne', abbr: 'WY'}`
 
 #### fetchOne Exceptions
 
-    "Can only call fetch/fetchOne/fetchValue on select queries."
-    "fetchOne/fetchValue: query returned no rows"
+Exceptions may be thrown by this method. Any exceptions will be of the standard Javascript form of an Error
+object containing `name` and `message` properties, as produced with `throw new Error()`. Some exceptions may
+be thrown by methods called by `fetchOne`.
+
+| name | message |
+|----- | ------- |
+| PG: fetch must be select | Can only call fetch/fetchOne/fetchValue on select queries. |
+| PG.fetchOne no data | fetchOne/fetchValue: query returned no rows. |
 
 ### fetchValue([column])
 
@@ -124,11 +130,17 @@ If your counts lie in the representable range for integers in Javascript (intege
 
 #### fetchValue Exceptions
 
-    "Can only call fetch/fetchOne/fetchValue on select queries."
-    "fetchOne/fetchValue: query returned no rows"
-    "fetchValue(): query returned more than one column."
-    "fetchValue(column): column 'xxx' does not exist."
-    "fetchValue(column): column must be a string."
+Exceptions may be thrown by this method. Any exceptions will be of the standard Javascript form of an Error
+object containing `name` and `message` properties, as produced with `throw new Error()`. Some exceptions may
+be thrown by methods called by `fetchValue`.
+
+| name | message |
+|----- | ------- |
+| PG: fetch must be select | Can only call fetch/fetchOne/fetchValue on select queries. |
+| PG: fetchOne no data | fetchOne/fetchValue: query returned no rows. |
+| PG: fetchValue too many columns | fetchValue(): query returned more than one column. |
+| PG: fetchValue no such column | fetchValue(column): column 'xxx' does not exist. |
+| PG: fetchValue parameter not string | fetchValue(column): column must be a string. |
 
 ## Knex docs
 
