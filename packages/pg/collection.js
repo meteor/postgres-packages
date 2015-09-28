@@ -45,7 +45,7 @@ PG.Table = class Table {
           });
         }
       } else {
-        throw new Error(`Table '${tableName}' doesn't exist. Please create it in a migration.`);
+        throw new Error(`PG: no such table`, `Table '${tableName}' doesn't exist. Please create it in a migration.`);
       }
     }
   }
@@ -61,7 +61,7 @@ const QBProto = Meteor.isClient ?
 QBProto.fetchOne = function fetchOne() {
   const rows = QBProto.fetch.call(this);
   if (rows.length === 0) {
-    throw new Error("fetchOne/fetchValue: query returned no rows");
+    return; //                                            It may not be ready yet, so return undefined
   } else {
     return rows[0];
   }
@@ -72,21 +72,24 @@ QBProto.fetchOne = function fetchOne() {
 // If more than one column is returned, use fetchValue(columnName) to get it.
 QBProto.fetchValue = function fetchValue(column) {
   const row = QBProto.fetchOne.call(this);
+  if (_.isUndefined(row)) {
+    return; //                                            Early return if undefined.
+  }
   if (_.isUndefined(column)) { //                         If no column was requested ...
     const keys = Object.keys(row);
     if (keys.length === 1) { //                           we only expect one in the response.
       return row[keys[0]];
     } else {
-      throw new Error("fetchValue(): query returned more than one column.");
+      throw new Error(`PG: fetchValue too many columns`, `fetchValue(): query returned more than one column.`);
     }
   } else if (_.isString(column)) { //                     If a column was requested ...
     if (_.isUndefined(row[column])) { //                  we expect it to be there
-      throw new Error("fetchValue(column): column '" + column + "' does not exist.");
+      return; //                                          It may not be ready yet, so return undefined.
     } else {
       return row[column]; //                              and we return it if it is.
     }
   } else {
-    throw new Error("fetchValue(column): column must be a string.");
+    throw new Error(`PG: fetchValue parameter not string`, `fetchValue(column): column must be a string.`);
   }
 };
 

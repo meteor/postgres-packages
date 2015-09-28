@@ -5,7 +5,7 @@ PG.knex = Knex(null);
 const QBProto = Knex.QueryBuilder.prototype;
 
 PG.knex.raw = function raw() {
-  throw new Error("Can't use raw SQL queries on the client.");
+  throw new Error(`PG: raw not on client`, `Can't use raw SQL queries on the client.`);
 }
 
 // Run the query against minimongo and return exactly what minimongo would have
@@ -28,7 +28,7 @@ QBProto._runNotFetch = function _runNotFetch() {
   };
 
   if (! collection) {
-    throw new Error('Specify the table to query. E.g.: PG.knex("table")...');
+    throw new Error(`PG: no table`, `Specify the table to query. E.g.: PG.knex('table')...`);
   }
 
   // run this query against local minimongo
@@ -36,7 +36,7 @@ QBProto._runNotFetch = function _runNotFetch() {
   const args = [];
 
   if (! minimongo) {
-    throw new Error('Specified table "' + collection + '" is not registered on the Client');
+    throw new Error(`PG: table not on client`, `Specified table '${collection}' is not registered on the Client.`);
   }
 
   if (method === 'find') {
@@ -74,7 +74,7 @@ QBProto._applyMethodOnCursor = function _applyMethodOnCursor(methodName, args) {
   if (_.isFunction(ret[methodName])) {
     return ret[methodName].apply(ret, args);
   } else {
-    throw new Error(`Can only call ${methodName}() on select queries.`);
+    throw new Error(`PG: not select`, `Can only call ${methodName}() on select queries.`);
   }
 };
 

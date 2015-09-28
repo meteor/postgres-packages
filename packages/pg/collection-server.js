@@ -43,7 +43,7 @@ PG.knex.raw = function () {
 
   ret._publishCursor = (sub) => {
     if (! ret._publishAs) {
-      throw new Error("Need to set table name with .publishAs() if publishing a raw query.");
+      throw new Error(`PG: set table name`, `Need to set table name with .publishAs() if publishing a raw query.`);
     }
 
     return new PG.Query(ret.toString(), ret._publishAs)._publishCursor(sub);
@@ -73,7 +73,7 @@ QBProto.fetch = function fetch() {
   if (this._method === 'select') {
     return this.run();
   } else {
-    throw new Error("Can only call fetch/fetchOne/fetchValue on select queries.");
+    throw new Error(`PG: fetch must be select`, `Can only call fetch/fetchOne/fetchValue on select queries.`);
   }
 }
 
@@ -82,7 +82,7 @@ QBProto.publishAs = function publishAs(tableName) {
 };
 
 PG.Model = function modelError() {
-  throw new Error("PG.Model not implemented for the server.");
+  throw new Error(`PG.Model not on server`, `PG.Model not implemented for the server.`);
 }
 
 const Future = Npm.require('fibers/future');

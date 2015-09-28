@@ -342,7 +342,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
         return;
       }
       if (! row.id)
-        throw new Error('LiveQuery requires queries to return a unique non-null `id` column');
+        throw new Error(`PG: unique id needed`, `LiveQuery requires queries to return a unique non-null 'id' column`);
 
       newData[row.id] = row;
     });
@@ -370,7 +370,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
       queryBuffer.initializedFuture = null;
       queryFuture.return();
     } else {
-      throw new Error('This should not happen! Cannot reanimate a stopped livepg observe.');
+      throw new Error(`PG: unexpected!`, `This should not happen! Cannot reanimate a stopped livepg observe.`);
     }
   }
 
@@ -525,7 +525,7 @@ function filterHashProperties(obj) {
   if (obj instanceof Object) {
     return _.omit(obj, '_hash', 'removed_hash');
   }
-  throw new Error('bad call of filterHashProperties ' + JSON.stringify(obj));
+  throw new Error(`PG: bad call`, `bad call of filterHashProperties ` + JSON.stringify(obj));
 }
 
 function findDependentRelations(client, query, params) {
