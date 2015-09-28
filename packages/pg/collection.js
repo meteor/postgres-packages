@@ -61,7 +61,7 @@ const QBProto = Meteor.isClient ?
 QBProto.fetchOne = function fetchOne() {
   const rows = QBProto.fetch.call(this);
   if (rows.length === 0) {
-    throw new Error(`PG: fetchOne no data`, `fetchOne/fetchValue: query returned no rows.`);
+    return; //                                            It may not be ready yet, so return undefined
   } else {
     return rows[0];
   }
@@ -72,6 +72,9 @@ QBProto.fetchOne = function fetchOne() {
 // If more than one column is returned, use fetchValue(columnName) to get it.
 QBProto.fetchValue = function fetchValue(column) {
   const row = QBProto.fetchOne.call(this);
+  if (_.isUndefined(row)) {
+    return; //                                            Early return if undefined.
+  }
   if (_.isUndefined(column)) { //                         If no column was requested ...
     const keys = Object.keys(row);
     if (keys.length === 1) { //                           we only expect one in the response.
@@ -81,7 +84,7 @@ QBProto.fetchValue = function fetchValue(column) {
     }
   } else if (_.isString(column)) { //                     If a column was requested ...
     if (_.isUndefined(row[column])) { //                  we expect it to be there
-      throw new Error(`PG: fetchValue no such column`, `fetchValue(column): column '${column}' does not exist`);
+      return; //                                          It may not be ready yet, so return undefined.
     } else {
       return row[column]; //                              and we return it if it is.
     }

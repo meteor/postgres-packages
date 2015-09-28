@@ -56,9 +56,7 @@ Tinytest.add('pg - query builder - check fetchOne works', (test) => {
   test.isTrue(row instanceof Object); //                  We should have an object
   test.isTrue('id' in row); //                            with an id column
   test.isTrue('name' in row); //                          and a name column
-  test.throws(() => { //                                  Make sure "no data" is thrown
-    Table.where({id: 999}).fetchOne();
-  }, 'PG: fetchOne no data');
+  test.isUndefined(Table.where({id: 999}).fetchOne()); // Look for a non-existant id and make sure we get undefined
 });
 
 Tinytest.add('pg - query builder - check fetchValue works', (test) => {
@@ -66,13 +64,11 @@ Tinytest.add('pg - query builder - check fetchValue works', (test) => {
   test.equal(n, 2); //                                    We should have a count of 2
   const name = Table.where({id: 2}).fetchValue('name'); //Get Alice
   test.equal(name, 'Alice'); //                           Should be "Alice"
-  test.throws(() => { //                                  Make sure "no such column" is thrown
-    Table.where({id: 2}).fetchValue('age');
-  }, 'PG: fetchValue no such column');
+  //                                                      Look for a non-existant column and make sure we get undefined
+  test.isUndefined(Table.where({id: 2}).fetchValue('age'));
   test.throws(() => { //                                  Make sure "must be a string" is thrown
     Table.where({id: 2}).fetchValue({});
   }, 'PG: fetchValue parameter not string');
-  test.throws(() => { //                                  Make sure "no data" is thrown
-    Table.where({id: 999}).fetchValue('name');
-  }, 'PG: fetchOne no data');
+  //                                                      Check findOne's early return for no rows: make sure we get undefined
+  test.isUndefined(Table.where({id: 999}).fetchValue('name'));
 });
