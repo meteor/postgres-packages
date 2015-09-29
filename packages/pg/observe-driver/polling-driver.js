@@ -47,15 +47,21 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
         updates.added.forEach(v => added(v));
       };
 
+      const errCb = (err) => {
+        throw err;
+      };
+
       const handle = {
         stop: () => {
           this._stopSelect(handle);
         },
         _queryHash: queryHash,
-        _cb: cb
+        _cb: cb,
+        _errCb: errCb
       };
 
       this.on('update', cb);
+      this.on('error', errCb);
       this._setupSelect(query, params, pollValidators, handle);
 
       // seed initial
@@ -190,6 +196,7 @@ PgLiveQuery = class PgLiveQuery extends EventEmitter {
 
   _stopSelect(handle) {
     this.removeListener('update', handle._cb);
+    this.removeListener('error', handle._errCb);
     const queryBuffer = this.queries[handle._queryHash];
     const pos = queryBuffer.handles.indexOf(handle);
     if (pos > -1) {
