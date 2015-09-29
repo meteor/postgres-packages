@@ -27,10 +27,6 @@ PG.Query.prototype.observe = function (cbs) {
   // poll validators shouldn't be empty
   var handle = livePg.select(this.sqlString, this.params, {}, cbs);
 
-  livePg.on('error', function (err) {
-    throw err;
-  });
-
   return handle;
 };
 
