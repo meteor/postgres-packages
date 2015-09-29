@@ -5,6 +5,7 @@
 # but you can also edit it by hand.
 
 less
+accounts-password-pg-driver
 accounts-password
 reactive-var
 meteorhacks:npm

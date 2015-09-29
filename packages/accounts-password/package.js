@@ -11,8 +11,7 @@ Package.onUse(function(api) {
     'srp',
     'sha',
     'ejson',
-    'ddp',
-    'accounts-password-pg-driver'
+    'ddp'
   ], ['client', 'server']);
 
   // Export Accounts (etc) to packages using this one.

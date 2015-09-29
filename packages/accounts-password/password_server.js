@@ -319,7 +319,7 @@ Meteor.methods({changePassword: function (oldPassword, newPassword) {
   if (!this.userId)
     throw new Meteor.Error(401, "Must be logged in");
 
-  var user = Meteor.users.findOne(this.userId);
+  var user = Accounts.dbClient.getUserById(this.userId);
   if (!user)
     throw new Meteor.Error(403, "User not found");
 
@@ -345,17 +345,7 @@ Meteor.methods({changePassword: function (oldPassword, newPassword) {
   // be tricky, so we'll settle for just replacing all tokens other than
   // the one for the current connection.
   var currentToken = Accounts._getLoginToken(this.connection.id);
-  Meteor.users.update(
-    { _id: this.userId },
-    {
-      $set: { 'services.password.bcrypt': hashed },
-      $pull: {
-        'services.resume.loginTokens': { hashedToken: { $ne: currentToken } }
-      },
-      $unset: { 'services.password.reset': 1 }
-    }
-  );
-
+  Accounts.dbClient.updatePassword(this.userId, hashed, currentToken);
   return {passwordChanged: true};
 }});
 
