@@ -4,7 +4,6 @@ var pg = Npm.require('pg');
 
 PG._npmModule = pg;
 
-var pgClient = Meteor.wrapAsync(pg.connect.bind(pg))(PG.defaultConnectionUrl);
 var livePg = new PgLiveQuery({
   connectionUrl: PG.defaultConnectionUrl,
   channel: 'simple_pg_' + Random.id(4)
