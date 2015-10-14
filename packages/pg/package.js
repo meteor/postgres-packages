@@ -15,6 +15,7 @@ Package.onUse(function(api) {
 
   // PACKAGE DEPENDENCIES
   api.use([
+    'underscore',
     'ecmascript',
     'simple:bookshelf'
   ]);
@@ -22,7 +23,6 @@ Package.onUse(function(api) {
   api.use([
     'random',
     'ejson',
-    'underscore',
     'jsx'
   ], 'server');
 
