@@ -89,6 +89,8 @@ mkdir .knex
 cd .knex
 ```
 
+All Knex commands below should be run inside the `.knex` directory we just created.
+
 Then, install Knex and dependencies:
 
 ```sh
@@ -102,6 +104,7 @@ npm install --save knex pg
 Finally, initialize Knex:
 
 ```sh
+# Create knexfile.js in the current directory
 knex init
 ```
 
@@ -115,9 +118,15 @@ module.exports = {
 };
 ```
 
-This is the same environment variable that Meteor uses to find your database.
+This is used by knex during the migration process. 
 
-All Knex commands below should be run inside the `.knex` directory we just created.
+~~This is the same environment variable that Meteor uses to find your database.~~
+Meteor uses the environment variable ```POSTGRESQL_URL``` to find your database. The demo examples use ```run-app-sh``` to set this variable
+```
+export POSTGRESQL_URL="postgres://127.0.0.1/todos"
+```
+
+If this variable is not defined, it is default to ```postgres://127.0.0.1/postgres```.
 
 ### Creating a migration
 
