@@ -26,6 +26,9 @@ git clone https://github.com/meteor/postgres-packages.git
 # Set up Knex CLI tool
 cd postgres-packages/examples/react-todos/.knex/
 npm install -g knex
+## If you do not have package.json in in this folder, type the following command and answer a bunch of questions
+# npm init 
+## else just type
 npm install
 
 # Create database and run migrations
