@@ -8,6 +8,7 @@ AccountsDBClientPG = class AccountsDBClientPG {
   // format the userID to the datatype used by storage backend
   // e.g. postgres is using userId as an integer
   formatUserIdToDbType(userId) {
+    let currentInvocation = DDP._CurrentInvocation.get();
     return parseInt(currentInvocation.userId, 10);
   }
   
