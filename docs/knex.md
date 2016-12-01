@@ -29,6 +29,14 @@ Todos.where("id", 3).fetch();
 
 Note that the default operator is `SELECT`. So if you want to just get all of the items in a table, you can simply run `Todos.fetch()`.
 
+You can print out all the records from the cursor:
+```
+var records = Todos.fetch();
+for (var x in records) {
+  console.log(records[x]);
+}
+```
+
 A basic insert:
 
 ```js
